@@ -1,0 +1,146 @@
+openapi: 3.1.0
+info:
+  title: Mental Health Dashboard
+  description: Backend for tracking mood and wellness metrics.
+  version: 0.1.0
+paths:
+  /api/create-account:
+    post:
+      tags:
+      - Authentication
+      summary: Create Account
+      description: Create account
+      operationId: create_account_api_create_account_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /api/user-login:
+    post:
+      tags:
+      - Authentication
+      summary: User Login
+      description: User Login
+      operationId: user_login_api_user_login_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /api/forgot-password:
+    post:
+      tags:
+      - Authentication
+      summary: Forgot Password
+      description: Forgot password
+      operationId: forgot_password_api_forgot_password_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /api/logout:
+    post:
+      tags:
+      - Authentication
+      summary: Logout
+      description: Log out user
+      operationId: logout_api_logout_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /api/delete-account:
+    delete:
+      tags:
+      - Users
+      summary: Delete Account
+      description: Delete account
+      operationId: delete_account_api_delete_account_delete
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /api/get-journal:
+    get:
+      tags:
+      - Journal
+      summary: Get Journal
+      description: View journal entry
+      operationId: get_journal_api_get_journal_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /api/save-journal:
+    post:
+      tags:
+      - Journal
+      summary: Save Journal
+      description: Save journal entry
+      operationId: save_journal_api_save_journal_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /api/save-questionnaire:
+    post:
+      tags:
+      - Questionnaires
+      summary: Save Questionnaire
+      description: Save questionnaire answers
+      operationId: save_questionnaire_api_save_questionnaire_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /api/avg-questionnaire:
+    get:
+      tags:
+      - Questionnaires
+      summary: Get Avg Questionnaire
+      description: Calculate average Score results
+      operationId: get_avg_questionnaire_api_avg_questionnaire_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /api/visualize-avg:
+    get:
+      tags:
+      - Questionnaires
+      summary: Visualize Avg
+      description: Get average questionnaire Scores for a specified time period
+      operationId: visualize_avg_api_visualize_avg_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /:
+    get:
+      summary: Root
+      operationId: root__get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}

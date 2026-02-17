@@ -1,11 +1,19 @@
 import uvicorn
 from fastapi import FastAPI
 
+from app.api.endpoints import auth, journal, questionnaires, users
+
 app = FastAPI(
     title="Mental Health Dashboard",
     description="Backend for tracking mood and wellness metrics.",
     version="0.1.0",
 )
+
+# Include routers for different API endpoints
+app.include_router(auth.router, prefix="/api", tags=["Authentication"])
+app.include_router(users.router, prefix="/api", tags=["Users"])
+app.include_router(journal.router, prefix="/api", tags=["Journal"])
+app.include_router(questionnaires.router, prefix="/api", tags=["Questionnaires"])
 
 
 @app.get("/")
