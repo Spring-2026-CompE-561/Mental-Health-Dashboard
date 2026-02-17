@@ -1,0 +1,38 @@
+[project]
+name = "mental-health-dashboard"
+version = "0.1.0"
+description = "A full-stack dashboard for tracking mental health metrics."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn>=0.30.0",
+    "pyyaml",
+]
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.0.0",
+    "ruff>=0.9.0",
+]
+
+[project.scripts]
+dev = "app.main:start"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/app"]
+
+[tool.uv]
+managed = true
+package = true
+default-groups = ["dev"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
