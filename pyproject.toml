@@ -8,6 +8,8 @@ dependencies = [
     "fastapi>=0.115.0",
     "uvicorn>=0.30.0",
     "pyyaml",
+    "pydantic[email]>=2.12.5",
+    "sqlalchemy>=2.0.46",
 ]
 
 [dependency-groups]
@@ -32,7 +34,8 @@ package = true
 default-groups = ["dev"]
 
 [tool.ruff]
-line-length = 100
+line-length = 120
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+extend-ignore = ["B008"]

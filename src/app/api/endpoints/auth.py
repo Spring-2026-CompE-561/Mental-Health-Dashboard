@@ -1,27 +1,28 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy.orm import Session
+
+# Import Database Dependency
+from app.api.deps import get_db
+
+# Import Schemas
+from app.models.schemas import LoginResponse, UserCreate, UserLogin, UserResponse
 
 router = APIRouter()
 
 
-@router.post("/create-account")
-async def create_account():
-    """Create account"""
-    return {"success": True, "Message": "Account created Successfully"}
+@router.post("/create-account", response_model=UserResponse)
+async def create_account(user_data: UserCreate, db: Session = Depends(get_db)):
+    """Create account with username/email/password"""
+    return {"id": 1, "username": user_data.username, "email": user_data.email}
 
 
-@router.post("/user-login")
-async def user_login():
-    """User Login"""
-    return {"success": True, "user": {"id": "", "Name": "", "email": ""}, "token": ""}
+@router.post("/login", response_model=LoginResponse)
+async def login(credentials: UserLogin, db: Session = Depends(get_db)):
+    """Log in with credentials and receive a JWT token"""
+    return {"token": "jwt-token-here", "userId": "user-uuid"}
 
 
-@router.post("/forgot-password")
-async def forgot_password():
-    """Forgot password"""
-    return {"message": "A password reset link has been sent"}
-
-
-@router.post("/logout")
-async def logout():
-    """Log out user"""
-    return {"success": True, "Message": "User logged out successfully"}
+@router.get("/auth/google/callback")
+async def google_callback(code: str = Query(...), db: Session = Depends(get_db)):
+    """Handle Google OAuth callback"""
+    return {"message": "Google account connected", "userId": "user-uuid"}

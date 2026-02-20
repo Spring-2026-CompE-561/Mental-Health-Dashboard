@@ -9,131 +9,381 @@ paths:
       tags:
       - Authentication
       summary: Create Account
-      description: Create account
+      description: Create account with username/email/password
       operationId: create_account_api_create_account_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+        required: true
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
-              schema: {}
-  /api/user-login:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/login:
     post:
       tags:
       - Authentication
-      summary: User Login
-      description: User Login
-      operationId: user_login_api_user_login_post
+      summary: Login
+      description: Log in with credentials and receive a JWT token
+      operationId: login_api_login_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLogin'
+        required: true
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
-              schema: {}
-  /api/forgot-password:
-    post:
-      tags:
-      - Authentication
-      summary: Forgot Password
-      description: Forgot password
-      operationId: forgot_password_api_forgot_password_post
-      responses:
-        '200':
-          description: Successful Response
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '422':
+          description: Validation Error
           content:
             application/json:
-              schema: {}
-  /api/logout:
-    post:
-      tags:
-      - Authentication
-      summary: Logout
-      description: Log out user
-      operationId: logout_api_logout_post
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema: {}
-  /api/delete-account:
-    delete:
-      tags:
-      - Users
-      summary: Delete Account
-      description: Delete account
-      operationId: delete_account_api_delete_account_delete
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema: {}
-  /api/get-journal:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/auth/google/callback:
     get:
       tags:
-      - Journal
-      summary: Get Journal
-      description: View journal entry
-      operationId: get_journal_api_get_journal_get
+      - Authentication
+      summary: Google Callback
+      description: Handle Google OAuth callback
+      operationId: google_callback_api_auth_google_callback_get
+      parameters:
+      - name: code
+        in: query
+        required: true
+        schema:
+          type: string
+          title: Code
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema: {}
-  /api/save-journal:
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/create:
     post:
       tags:
       - Journal
-      summary: Save Journal
-      description: Save journal entry
-      operationId: save_journal_api_save_journal_post
+      summary: Create Journal
+      description: Create a journal entry
+      operationId: create_journal_api_create_post
+      parameters:
+      - name: authorization
+        in: header
+        required: true
+        schema:
+          type: string
+          title: Authorization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JournalCreate'
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
-              schema: {}
-  /api/save-questionnaire:
+              schema:
+                $ref: '#/components/schemas/JournalResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/:
+    get:
+      tags:
+      - Questionnaires
+      summary: Get Questionnaires
+      description: Get questionnaire scores for logged-in user
+      operationId: get_questionnaires_api__get
+      parameters:
+      - name: authorization
+        in: header
+        required: true
+        schema:
+          type: string
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/QuestionnaireResponse'
+                title: Response Get Questionnaires Api  Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
     post:
       tags:
       - Questionnaires
       summary: Save Questionnaire
-      description: Save questionnaire answers
-      operationId: save_questionnaire_api_save_questionnaire_post
+      description: Save daily questionnaire score
+      operationId: save_questionnaire_api__post
+      parameters:
+      - name: authorization
+        in: header
+        required: true
+        schema:
+          type: string
+          title: Authorization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuestionnaireCreate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuestionnaireResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/{id}:
+    get:
+      tags:
+      - Journal
+      summary: Get Journal
+      description: Get a single journal entry
+      operationId: get_journal_api__id__get
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Id
+      - name: authorization
+        in: header
+        required: true
+        schema:
+          type: string
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JournalResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    put:
+      tags:
+      - Journal
+      summary: Update Journal
+      description: Update an existing journal entry
+      operationId: update_journal_api__id__put
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Id
+      - name: authorization
+        in: header
+        required: true
+        schema:
+          type: string
+          title: Authorization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JournalCreate'
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema: {}
-  /api/avg-questionnaire:
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - Journal
+      summary: Delete Journal
+      description: Delete a journal entry
+      operationId: delete_journal_api__id__delete
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Id
+      - name: authorization
+        in: header
+        required: true
+        schema:
+          type: string
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/average:
     get:
       tags:
       - Questionnaires
-      summary: Get Avg Questionnaire
-      description: Calculate average Score results
-      operationId: get_avg_questionnaire_api_avg_questionnaire_get
+      summary: Get Average Score
+      description: Get average questionnaire score
+      operationId: get_average_score_api_average_get
+      parameters:
+      - name: authorization
+        in: header
+        required: true
+        schema:
+          type: string
+          title: Authorization
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
-              schema: {}
-  /api/visualize-avg:
+              schema:
+                $ref: '#/components/schemas/QuestionnaireAverageResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/users/create-account:
+    post:
+      tags:
+      - Users
+      summary: Create Account
+      description: Create account with username/email/password
+      operationId: create_account_api_users_create_account_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/users/login:
+    post:
+      tags:
+      - Users
+      summary: Login
+      description: Log in with credentials and receive a JWT token
+      operationId: login_api_users_login_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLogin'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/users/auth/google/callback:
     get:
       tags:
-      - Questionnaires
-      summary: Visualize Avg
-      description: Get average questionnaire Scores for a specified time period
-      operationId: visualize_avg_api_visualize_avg_get
+      - Users
+      summary: Google Callback
+      description: Handle Google OAuth callback
+      operationId: google_callback_api_users_auth_google_callback_get
+      parameters:
+      - name: code
+        in: query
+        required: true
+        schema:
+          type: string
+          title: Code
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /:
     get:
       summary: Root
@@ -144,3 +394,206 @@ paths:
           content:
             application/json:
               schema: {}
+components:
+  schemas:
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    JournalCreate:
+      properties:
+        body:
+          type: string
+          title: Body
+      type: object
+      required:
+      - body
+      title: JournalCreate
+    JournalResponse:
+      properties:
+        body:
+          type: string
+          title: Body
+        id:
+          type: integer
+          title: Id
+        user_id:
+          type: integer
+          title: User Id
+        date_created:
+          type: string
+          format: date
+          title: Date Created
+      type: object
+      required:
+      - body
+      - id
+      - user_id
+      - date_created
+      title: JournalResponse
+    LoginResponse:
+      properties:
+        token:
+          type: string
+          title: Token
+        userId:
+          type: string
+          title: Userid
+      type: object
+      required:
+      - token
+      - userId
+      title: LoginResponse
+    QuestionnaireAverage:
+      properties:
+        user_id:
+          type: integer
+          title: User Id
+        avg_score:
+          type: number
+          title: Avg Score
+      type: object
+      required:
+      - user_id
+      - avg_score
+      title: QuestionnaireAverage
+    QuestionnaireAverageResponse:
+      properties:
+        success:
+          type: boolean
+          title: Success
+          default: true
+        average:
+          $ref: '#/components/schemas/QuestionnaireAverage'
+      type: object
+      required:
+      - average
+      title: QuestionnaireAverageResponse
+    QuestionnaireCreate:
+      properties:
+        score:
+          type: number
+          title: Score
+          description: The daily questionnaire score
+      type: object
+      required:
+      - score
+      title: QuestionnaireCreate
+    QuestionnaireResponse:
+      properties:
+        score:
+          type: number
+          title: Score
+          description: The daily questionnaire score
+        id:
+          type: integer
+          title: Id
+        user_id:
+          type: integer
+          title: User Id
+        created_at:
+          type: string
+          format: date
+          title: Created At
+      type: object
+      required:
+      - score
+      - id
+      - user_id
+      - created_at
+      title: QuestionnaireResponse
+    SuccessResponse:
+      properties:
+        success:
+          type: boolean
+          title: Success
+          default: true
+        message:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Message
+      type: object
+      title: SuccessResponse
+    UserCreate:
+      properties:
+        username:
+          type: string
+          title: Username
+        email:
+          type: string
+          format: email
+          title: Email
+        password:
+          type: string
+          title: Password
+      type: object
+      required:
+      - username
+      - email
+      - password
+      title: UserCreate
+    UserLogin:
+      properties:
+        email:
+          type: string
+          format: email
+          title: Email
+        password:
+          type: string
+          title: Password
+      type: object
+      required:
+      - email
+      - password
+      title: UserLogin
+    UserResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Name
+        email:
+          type: string
+          format: email
+          title: Email
+      type: object
+      required:
+      - id
+      - email
+      title: UserResponse
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
