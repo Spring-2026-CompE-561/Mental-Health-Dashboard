@@ -1,6 +1,6 @@
 from datetime import date
 
-from fastapi import APIRouter, Depends, Header
+from fastapi import APIRouter, Depends, Header, Query
 from sqlalchemy.orm import Session
 
 # Import Database Dependency
@@ -31,6 +31,11 @@ async def get_questionnaires(db: Session = Depends(get_db), authorization: str =
 
 
 @router.get("/average", response_model=QuestionnaireAverageResponse)
-async def get_average_score(db: Session = Depends(get_db), authorization: str = Header(...)):
+async def get_average_score(
+    from_date: date | None = Query(None),
+    to_date: date | None = Query(None),
+    db: Session = Depends(get_db),
+    authorization: str = Header(...),
+):
     """Get average questionnaire score"""
     return {"success": True, "average": {"user_id": 123, "avg_score": 78.5}}

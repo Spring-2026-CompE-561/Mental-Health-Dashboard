@@ -11,8 +11,8 @@ app = FastAPI(
 
 # Include routers for different API endpoints
 app.include_router(auth.router, prefix="/api", tags=["Authentication"])
-app.include_router(journal.router, prefix="/api", tags=["Journal"])
-app.include_router(questionnaires.router, prefix="/api", tags=["Questionnaires"])
+app.include_router(journal.router, prefix="/api/journals", tags=["Journal"])
+app.include_router(questionnaires.router, prefix="/api/questionnaires", tags=["Questionnaires"])
 app.include_router(auth.router, prefix="/api/users", tags=["Users"])
 
 
