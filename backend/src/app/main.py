@@ -1,25 +1,31 @@
-import uvicorn
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.core.config import settings
 
-from app.api.endpoints import auth, journal, questionnaires
+# Import Routers
+from app.routes import auth, users, journals, questionnaires
 
 app = FastAPI(
-    title="Mental Health Dashboard",
-    description="Backend for tracking mood and wellness metrics.",
-    version="0.1.0",
+    title=settings.PROJECT_NAME,
+    version=settings.VERSION,
+    description="Backend for tracking mood and wellness metrics."
 )
 
-# Include routers for different API endpoints
-app.include_router(auth.router, prefix="/api", tags=["Authentication"])
-app.include_router(journal.router, prefix="/api", tags=["Journal"])
-app.include_router(questionnaires.router, prefix="/api", tags=["Questionnaires"])
-app.include_router(auth.router, prefix="/api/users", tags=["Users"])
+# Middleware configuration for CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
+# Include Routers
+app.include_router(auth.router, prefix="/api")
+app.include_router(users.router, prefix="/api")
+app.include_router(journals.router, prefix="/api")
+app.include_router(questionnaires.router, prefix="/api")
 
 @app.get("/")
 async def root():
     return {"message": "Welcome to the Mental Health Dashboard API"}
-
-
-def start():
-    uvicorn.run("app.main:app", host="127.0.0.1", port=8000, reload=True)

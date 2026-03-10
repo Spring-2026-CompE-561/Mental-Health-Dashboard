@@ -1,0 +1,16 @@
+from sqlalchemy import Column, Integer, String, Date
+from sqlalchemy.orm import relationship
+from app.repositories.db import Base
+
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    username = Column(String, nullable=False)
+    email = Column(String, unique=True, index=True, nullable=False)
+    hashed_password = Column(String, nullable=False)
+    oauth_provider = Column(String, nullable=True)
+    google_oauth_id = Column(String, nullable=True)
+    created_at = Column(Date)
+    
+    journals = relationship("Journal", back_populates="owner", cascade="all, delete-orphan")
+    questionnaires = relationship("Questionnaire", back_populates="owner", cascade="all, delete-orphan")
