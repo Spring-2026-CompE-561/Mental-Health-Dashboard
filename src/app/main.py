@@ -1,7 +1,9 @@
 import uvicorn
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.endpoints import auth, journal, questionnaires
+from app.api.endpoints import auth, journal, questionnaires, users
+from app.models.database import create_tables
 
 app = FastAPI(
     title="Mental Health Dashboard",
@@ -9,16 +11,28 @@ app = FastAPI(
     version="0.1.0",
 )
 
-# Include routers for different API endpoints
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(auth.router, prefix="/api", tags=["Authentication"])
-app.include_router(journal.router, prefix="/api/journals", tags=["Journal"])
+app.include_router(users.router, prefix="/api/users", tags=["Users"])
+app.include_router(journal.router, prefix="/api/journals", tags=["Journals"])
 app.include_router(questionnaires.router, prefix="/api/questionnaires", tags=["Questionnaires"])
-app.include_router(auth.router, prefix="/api/users", tags=["Users"])
+
+
+@app.on_event("startup")
+def on_startup():
+    create_tables()
 
 
 @app.get("/")
 async def root():
-    return {"message": "Welcome to the Mental Health Dashboard API"}
+    return {"status": "ok", "message": "Mental Health Dashboard API"}
 
 
 def start():
