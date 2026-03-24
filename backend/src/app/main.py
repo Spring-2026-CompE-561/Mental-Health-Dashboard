@@ -1,5 +1,6 @@
 import logging
 import time
+from contextlib import asynccontextmanager
 
 import uvicorn
 from fastapi import FastAPI, Request
@@ -12,10 +13,18 @@ import app.models  # noqa: F401  — force all ORM models to register with Base
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("mental_health_api")
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    create_tables()
+    yield
+
+
 app = FastAPI(
     title="Mental Health Dashboard",
     description="Backend for tracking mood and wellness metrics.",
     version="0.1.0",
+    lifespan=lifespan,
 )
 
 # CORS middleware for React frontend
@@ -49,11 +58,6 @@ app.include_router(auth.router, prefix="/api", tags=["Authentication"])
 app.include_router(users.router, prefix="/api/users", tags=["Users"])
 app.include_router(journal.router, prefix="/api/journals", tags=["Journals"])
 app.include_router(questionnaires.router, prefix="/api/questionnaires", tags=["Questionnaires"])
-
-
-@app.on_event("startup")
-def on_startup():
-    create_tables()
 
 
 @app.get("/")
