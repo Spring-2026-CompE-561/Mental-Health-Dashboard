@@ -1,7 +1,16 @@
-import uvicorn
-from fastapi import FastAPI
+import logging
+import time
 
-from app.api.endpoints import auth, journal, questionnaires
+import uvicorn
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.api.endpoints import auth, journal, questionnaires, users
+from app.core.database import create_tables
+import app.models  # noqa: F401  — force all ORM models to register with Base
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("mental_health_api")
 
 app = FastAPI(
     title="Mental Health Dashboard",
@@ -9,16 +18,47 @@ app = FastAPI(
     version="0.1.0",
 )
 
-# Include routers for different API endpoints
+# CORS middleware for React frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+# HTTP logging middleware
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    duration = round(time.time() - start_time, 4)
+    logger.info(
+        "%s %s -> %s (%.4fs)",
+        request.method,
+        request.url.path,
+        response.status_code,
+        duration,
+    )
+    return response
+
+
+# Routers
 app.include_router(auth.router, prefix="/api", tags=["Authentication"])
-app.include_router(journal.router, prefix="/api", tags=["Journal"])
-app.include_router(questionnaires.router, prefix="/api", tags=["Questionnaires"])
-app.include_router(auth.router, prefix="/api/users", tags=["Users"])
+app.include_router(users.router, prefix="/api/users", tags=["Users"])
+app.include_router(journal.router, prefix="/api/journals", tags=["Journals"])
+app.include_router(questionnaires.router, prefix="/api/questionnaires", tags=["Questionnaires"])
+
+
+@app.on_event("startup")
+def on_startup():
+    create_tables()
 
 
 @app.get("/")
 async def root():
-    return {"message": "Welcome to the Mental Health Dashboard API"}
+    return {"status": "ok", "message": "Mental Health Dashboard API"}
 
 
 def start():
