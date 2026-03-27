@@ -37,6 +37,17 @@ class TestCreateAccount:
         )
         assert resp.status_code == 422
 
+    def test_create_account_empty_username(self, client):
+        resp = client.post(
+            "/api/create-account",
+            json={
+                "username": "",
+                "email": "empty@example.com",
+                "password": "StrongPass123",
+            },
+        )
+        assert resp.status_code == 422
+
 
 class TestLogin:
     def test_login_success(self, client, registered_user):
