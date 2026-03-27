@@ -31,6 +31,6 @@ async def logout():
 
 
 @router.get("/auth/google/callback")
-async def google_callback(code: str = Query(...), db: Session = Depends(get_db)):
+async def google_callback(code: str = Query(...)):
     """Handle Google OAuth callback."""
     return {"message": "Google OAuth callback placeholder", "code": code}
