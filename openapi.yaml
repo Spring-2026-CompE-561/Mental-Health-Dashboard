@@ -82,13 +82,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /api/create:
+  /api/journals/create:
     post:
       tags:
       - Journal
       summary: Create Journal
       description: Create a journal entry
-      operationId: create_journal_api_create_post
+      operationId: create_journal_api_journals_create_post
       parameters:
       - name: authorization
         in: header
@@ -115,13 +115,43 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /api/:
+  /api/journals/:
+    get:
+      tags:
+      - Journal
+      summary: Get All Journals
+      description: Get all journal entries for logged-in user
+      operationId: get_all_journals_api_journals_get
+      parameters:
+      - name: authorization
+        in: header
+        required: true
+        schema:
+          type: string
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JournalResponse'
+                title: Response Get All Journals Api Journals Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/questionnaires/:
     get:
       tags:
       - Questionnaires
       summary: Get Questionnaires
       description: Get questionnaire scores for logged-in user
-      operationId: get_questionnaires_api__get
+      operationId: get_questionnaires_api_questionnaires__get
       parameters:
       - name: authorization
         in: header
@@ -150,7 +180,7 @@ paths:
       - Questionnaires
       summary: Save Questionnaire
       description: Save daily questionnaire score
-      operationId: save_questionnaire_api__post
+      operationId: save_questionnaire_api_questionnaires__post
       parameters:
       - name: authorization
         in: header
@@ -177,13 +207,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /api/{id}:
+  /api/journals/{id}:
     get:
       tags:
       - Journal
       summary: Get Journal
       description: Get a single journal entry
-      operationId: get_journal_api__id__get
+      operationId: get_journal_api_journals__id__get
       parameters:
       - name: id
         in: path
@@ -215,7 +245,7 @@ paths:
       - Journal
       summary: Update Journal
       description: Update an existing journal entry
-      operationId: update_journal_api__id__put
+      operationId: update_journal_api_journals__id__put
       parameters:
       - name: id
         in: path
@@ -252,7 +282,7 @@ paths:
       - Journal
       summary: Delete Journal
       description: Delete a journal entry
-      operationId: delete_journal_api__id__delete
+      operationId: delete_journal_api_journals__id__delete
       parameters:
       - name: id
         in: path
@@ -279,13 +309,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /api/average:
+  /api/questionnaires/average:
     get:
       tags:
       - Questionnaires
       summary: Get Average Score
       description: Get average questionnaire score
-      operationId: get_average_score_api_average_get
+      operationId: get_average_score_api_questionnaires_average_get
       parameters:
       - name: authorization
         in: header
@@ -293,6 +323,20 @@ paths:
         schema:
           type: string
           title: Authorization
+      - name: from_date
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+          title: From Date
+      - name: to_date
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+          title: To Date
       responses:
         '200':
           description: Successful Response
@@ -378,6 +422,136 @@ paths:
           content:
             application/json:
               schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/users/{id}:
+    get:
+      tags:
+      - Users
+      summary: Get User
+      description: Get user details by ID
+      operationId: get_user_api_users__id__get
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Id
+      - name: authorization
+        in: header
+        required: true
+        schema:
+          type: string
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    put:
+      tags:
+      - Users
+      summary: Update User
+      description: Update user details
+      operationId: update_user_api_users__id__put
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Id
+      - name: authorization
+        in: header
+        required: true
+        schema:
+          type: string
+          title: Authorization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - Users
+      summary: Delete User
+      description: Delete a user account
+      operationId: delete_user_api_users__id__delete
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Id
+      - name: authorization
+        in: header
+        required: true
+        schema:
+          type: string
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/logout:
+    post:
+      tags:
+      - Authentication
+      summary: Logout
+      description: Logout and invalidate current session
+      operationId: logout_api_logout_post
+      parameters:
+      - name: authorization
+        in: header
+        required: true
+        schema:
+          type: string
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
         '422':
           description: Validation Error
           content:

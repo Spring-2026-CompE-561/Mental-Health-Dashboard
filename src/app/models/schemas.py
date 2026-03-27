@@ -3,13 +3,10 @@ from datetime import date
 from pydantic import BaseModel, EmailStr, Field
 
 
-# --- Base Configuration ---
 class BaseSchema(BaseModel):
     class Config:
-        from_attributes = True  # Allows Pydantic to interface with SQLAlchemy models
+        from_attributes = True  
 
-
-# --- User & Auth Schemas ---
 
 
 class UserBase(BaseModel):
@@ -27,12 +24,13 @@ class UserLogin(BaseModel):
 
 
 class UserUpdate(BaseModel):
-    name: str
-    email: EmailStr
+    username: str | None = None
+    email: EmailStr | None = None
 
 
 class UserPasswordUpdate(BaseModel):
-    password: str
+    current_password: str
+    new_password: str
 
 
 class UserDeleteRequest(BaseModel):
@@ -41,7 +39,7 @@ class UserDeleteRequest(BaseModel):
 
 class UserResponse(BaseSchema):
     id: int
-    name: str | None = None
+    username: str
     email: EmailStr
 
 
