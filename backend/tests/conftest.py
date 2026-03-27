@@ -9,7 +9,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.api.deps import get_db
-from app.core.auth import create_access_token, hash_password
+from app.core.auth import create_access_token
 from app.core.database import Base
 from app.main import app as fastapi_app
 
@@ -66,6 +66,7 @@ def registered_user(client):
             "password": "SecurePass123",
         },
     )
+    assert resp.status_code == 200, f"User registration failed: {resp.status_code} {resp.text}"
     return resp.json()
 
 

@@ -1,5 +1,3 @@
-import pytest
-
 
 class TestCreateAccount:
     def test_create_account_success(self, client):
