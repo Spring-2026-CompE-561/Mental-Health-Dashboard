@@ -16,8 +16,21 @@ from app.repository.user import (
     get_user_by_email,
 )
 from app.repository.user import (
+    get_user_by_id as repo_get_user_by_id,
+)
+from app.repository.user import (
     update_user_password as repo_update_password,
 )
+
+
+def get_by_id(db: Session, user_id: int) -> User:
+    user = repo_get_user_by_id(db, user_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+    return user
 
 
 def register(db: Session, username: str, email: str, password: str) -> User:

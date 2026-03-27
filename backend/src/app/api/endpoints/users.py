@@ -3,14 +3,13 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
 from app.models.user import User
-from app.repository.user import get_user_by_id
 from app.schemas.user import (
     SuccessResponse,
     UserDeleteRequest,
     UserResponse,
     UserUpdatePassword,
 )
-from app.services.user_service import change_password, remove_account
+from app.services.user_service import change_password, get_by_id, remove_account
 
 router = APIRouter()
 
@@ -24,12 +23,7 @@ async def get_me(current_user: User = Depends(get_current_user)):
 @router.get("/{user_id}", response_model=UserResponse)
 async def get_user(user_id: int, db: Session = Depends(get_db)):
     """Retrieve a single user by ID."""
-    user = get_user_by_id(db, user_id)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-        )
-    return user
+    return get_by_id(db, user_id)
 
 
 @router.put("/{user_id}", response_model=SuccessResponse)
