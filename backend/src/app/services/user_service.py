@@ -8,13 +8,24 @@ from app.core.settings import settings
 from app.models.user import User
 from app.repository.user import (
     create_user as repo_create_user,
+)
+from app.repository.user import (
     delete_user as repo_delete_user,
+)
+from app.repository.user import (
     get_user_by_email,
+)
+from app.repository.user import (
     update_user_password as repo_update_password,
 )
 
 
 def register(db: Session, username: str, email: str, password: str) -> User:
+    if len(password) < 8:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must be at least 8 characters",
+        )
     existing_user = get_user_by_email(db, email)
     if existing_user:
         raise HTTPException(
@@ -34,15 +45,11 @@ def login(db: Session, email: str, password: str) -> dict:
             headers={"WWW-Authenticate": "Bearer"},
         )
     access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
-    access_token = create_access_token(
-        data={"sub": str(user.id)}, expires_delta=access_token_expires
-    )
+    access_token = create_access_token(data={"sub": str(user.id)}, expires_delta=access_token_expires)
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-def change_password(
-    db: Session, user: User, current_password: str, new_password: str
-) -> User:
+def change_password(db: Session, user: User, current_password: str, new_password: str) -> User:
     if not verify_password(current_password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
