@@ -1,3 +1,5 @@
+from datetime import date
+
 from sqlalchemy import Column, Date, Float, ForeignKey, Integer
 from sqlalchemy.orm import relationship
 
@@ -10,6 +12,6 @@ class Questionnaire(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     score = Column(Float)
-    created_at = Column(Date)
+    created_at = Column(Date, default=date.today)
 
     owner = relationship("User", back_populates="questionnaires")
