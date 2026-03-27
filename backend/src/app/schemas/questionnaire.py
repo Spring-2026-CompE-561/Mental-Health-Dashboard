@@ -1,6 +1,6 @@
-from pydantic import BaseModel, ConfigDict, field_validator
 from datetime import date
-from typing import Optional
+
+from pydantic import BaseModel, ConfigDict, field_validator
 
 
 class QuestionnaireBase(BaseModel):
@@ -18,6 +18,10 @@ class QuestionnaireCreate(QuestionnaireBase):
     pass  # user_id comes from the JWT
 
 
+class QuestionnaireUpdate(QuestionnaireBase):
+    pass  # same validation as create
+
+
 class QuestionnaireResponse(QuestionnaireBase):
     model_config = ConfigDict(from_attributes=True)
 
@@ -27,6 +31,6 @@ class QuestionnaireResponse(QuestionnaireBase):
 
 
 class QuestionnaireAverageResponse(BaseModel):
-    average_score: Optional[float] = None
-    from_date: Optional[date] = None
-    to_date: Optional[date] = None
+    average_score: float | None = None
+    from_date: date | None = None
+    to_date: date | None = None
