@@ -1,12 +1,21 @@
 from datetime import date
-from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 
 
 class UserBase(BaseModel):
     username: str
     email: EmailStr
+
+    @field_validator("username")
+    @classmethod
+    def username_must_be_valid(cls, v: str) -> str:
+        stripped = v.strip()
+        if len(stripped) < 3:
+            raise ValueError("Username must be at least 3 characters")
+        if len(stripped) > 50:
+            raise ValueError("Username must be at most 50 characters")
+        return stripped
 
 
 class UserCreate(UserBase):
@@ -31,8 +40,8 @@ class UserResponse(UserBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    oauth_provider: Optional[str] = None
-    created_at: Optional[date] = None
+    oauth_provider: str | None = None
+    created_at: date | None = None
 
 
 class SuccessResponse(BaseModel):

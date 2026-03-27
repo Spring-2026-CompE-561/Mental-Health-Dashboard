@@ -1,4 +1,3 @@
-
 class TestCreateAccount:
     def test_create_account_success(self, client):
         resp = client.post(
@@ -33,6 +32,17 @@ class TestCreateAccount:
             json={
                 "username": "baduser",
                 "email": "not-an-email",
+                "password": "StrongPass123",
+            },
+        )
+        assert resp.status_code == 422
+
+    def test_create_account_empty_username(self, client):
+        resp = client.post(
+            "/api/create-account",
+            json={
+                "username": "",
+                "email": "empty@example.com",
                 "password": "StrongPass123",
             },
         )
@@ -83,9 +93,7 @@ class TestGetUser:
         assert resp.status_code == 401
 
     def test_get_me_bad_token(self, client):
-        resp = client.get(
-            "/api/users/me", headers={"Authorization": "Bearer invalid-token"}
-        )
+        resp = client.get("/api/users/me", headers={"Authorization": "Bearer invalid-token"})
         assert resp.status_code == 401
 
     def test_get_user_by_id(self, client, registered_user):
