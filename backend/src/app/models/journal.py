@@ -1,3 +1,5 @@
+from datetime import date
+
 from sqlalchemy import Column, Date, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
@@ -10,6 +12,6 @@ class Journal(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     body = Column(String, nullable=False)
-    created_at = Column(Date)
+    created_at = Column(Date, default=date.today)
 
     owner = relationship("User", back_populates="journals")

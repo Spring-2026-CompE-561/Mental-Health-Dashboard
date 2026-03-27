@@ -1,3 +1,5 @@
+from datetime import date
+
 from sqlalchemy import Column, Date, Integer, String
 from sqlalchemy.orm import relationship
 
@@ -13,11 +15,7 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
     oauth_provider = Column(String, nullable=True)
     google_oauth_id = Column(String, nullable=True)
-    created_at = Column(Date)
+    created_at = Column(Date, default=date.today)
 
-    journals = relationship(
-        "Journal", back_populates="owner", cascade="all, delete-orphan"
-    )
-    questionnaires = relationship(
-        "Questionnaire", back_populates="owner", cascade="all, delete-orphan"
-    )
+    journals = relationship("Journal", back_populates="owner", cascade="all, delete-orphan")
+    questionnaires = relationship("Questionnaire", back_populates="owner", cascade="all, delete-orphan")
