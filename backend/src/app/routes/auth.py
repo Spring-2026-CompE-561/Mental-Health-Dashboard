@@ -1,6 +1,6 @@
 """API endpoints for user registration, login, logout, and OAuth callbacks."""
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from app.core.dependencies import get_db
@@ -13,7 +13,7 @@ from app.services.user_service import register
 router = APIRouter()
 
 
-@router.post("/create-account", response_model=UserResponse)
+@router.post("/create-account", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def create_account(user_data: UserCreate, db: Session = Depends(get_db)):
     """Create account with username/email/password."""
     user = register(db, username=user_data.username, email=user_data.email, password=user_data.password)

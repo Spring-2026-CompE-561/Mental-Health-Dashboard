@@ -1,6 +1,6 @@
 """API endpoints for journal entry CRUD operations."""
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
 from app.core.dependencies import get_current_user, get_db
@@ -18,7 +18,7 @@ from app.services.journal_service import (
 router = APIRouter()
 
 
-@router.post("/create", response_model=JournalResponse)
+@router.post("/create", response_model=JournalResponse, status_code=status.HTTP_201_CREATED)
 async def create_journal_entry(
     entry: JournalCreate,
     db: Session = Depends(get_db),

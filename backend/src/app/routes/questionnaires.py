@@ -2,7 +2,7 @@
 
 from datetime import date
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from app.core.dependencies import get_current_user, get_db
@@ -26,7 +26,7 @@ from app.services.questionnaire_service import (
 router = APIRouter()
 
 
-@router.post("/", response_model=QuestionnaireResponse)
+@router.post("/", response_model=QuestionnaireResponse, status_code=status.HTTP_201_CREATED)
 async def save_questionnaire(
     data: QuestionnaireCreate,
     db: Session = Depends(get_db),
