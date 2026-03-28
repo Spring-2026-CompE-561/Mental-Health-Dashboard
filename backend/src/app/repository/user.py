@@ -48,3 +48,24 @@ def delete_user(db: Session, user: User) -> None:
     """Remove a user from the database."""
     db.delete(user)
     db.commit()
+
+
+def get_user_by_google_id(db: Session, google_id: str) -> User | None:
+    """Return a user by Google OAuth ID, or None if not found."""
+    return db.query(User).filter(User.google_oauth_id == google_id).first()
+
+
+def create_oauth_user(db: Session, email: str, username: str, google_id: str) -> User:
+    """Create a new user from Google OAuth and return the created record."""
+    new_user = User(
+        username=username,
+        email=email,
+        hashed_password="",
+        oauth_provider="google",
+        google_oauth_id=google_id,
+        created_at=date.today(),
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
