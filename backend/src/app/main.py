@@ -1,3 +1,5 @@
+"""FastAPI application entry point with middleware, routing, and lifespan setup."""
+
 import logging
 import time
 from contextlib import asynccontextmanager
@@ -6,9 +8,9 @@ import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.endpoints import auth, journal, questionnaires, users
-from app.core.database import create_tables
 import app.models  # noqa: F401  — force all ORM models to register with Base
+from app.core.database import create_tables
+from app.routes import auth, journal, questionnaires, users
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("mental_health_api")
@@ -16,6 +18,7 @@ logger = logging.getLogger("mental_health_api")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """Create database tables on startup."""
     create_tables()
     yield
 
@@ -40,6 +43,7 @@ app.add_middleware(
 # HTTP logging middleware
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
+    """Log every HTTP request with method, path, status code, and duration."""
     start_time = time.time()
     response = await call_next(request)
     duration = round(time.time() - start_time, 4)
@@ -62,8 +66,10 @@ app.include_router(questionnaires.router, prefix="/api/questionnaires", tags=["Q
 
 @app.get("/")
 async def root():
+    """Health-check endpoint."""
     return {"status": "ok", "message": "Mental Health Dashboard API"}
 
 
 def start():
+    """Launch the development server with hot-reload."""
     uvicorn.run("app.main:app", host="127.0.0.1", port=8000, reload=True)

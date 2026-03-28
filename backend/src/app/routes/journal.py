@@ -1,7 +1,9 @@
+"""API endpoints for journal entry CRUD operations."""
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user, get_db
+from app.core.dependencies import get_current_user, get_db
 from app.models.user import User
 from app.schemas.journal import JournalCreate, JournalResponse, JournalUpdate
 from app.schemas.user import SuccessResponse

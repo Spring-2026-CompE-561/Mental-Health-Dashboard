@@ -1,3 +1,5 @@
+"""Pydantic schemas for user requests and responses."""
+
 from datetime import date
 
 from pydantic import BaseModel, ConfigDict, EmailStr, field_validator

@@ -1,3 +1,5 @@
+"""SQLAlchemy engine, session, and Base configuration."""
+
 from sqlalchemy import create_engine
 from sqlalchemy.engine import make_url
 from sqlalchemy.orm import declarative_base, sessionmaker
@@ -16,4 +18,5 @@ Base = declarative_base()
 
 
 def create_tables():
+    """Create all tables defined by ORM models that have been registered with Base."""
     Base.metadata.create_all(bind=engine)

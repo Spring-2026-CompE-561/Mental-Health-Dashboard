@@ -13,6 +13,7 @@ This project uses [uv](https://docs.astral.sh/uv/) for modern dependency managem
 Ensure you have `uv` installed on your machine:
 
 ```bash
+# Mac/Linux
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
@@ -148,17 +149,12 @@ backend/
 │       ├── __init__.py
 │       ├── main.py
 │       ├── api/
-│       │   ├── __init__.py
-│       │   ├── deps.py
-│       │   └── endpoints/
-│       │       ├── auth.py
-│       │       ├── journal.py
-│       │       ├── questionnaires.py
-│       │       └── users.py
+│       │   └── __init__.py
 │       ├── core/
 │       │   ├── __init__.py
 │       │   ├── auth.py
 │       │   ├── database.py
+│       │   ├── dependencies.py
 │       │   └── settings.py
 │       ├── models/
 │       │   ├── __init__.py
@@ -170,6 +166,12 @@ backend/
 │       │   ├── journal.py
 │       │   ├── questionnaire.py
 │       │   └── user.py
+│       ├── routes/
+│       │   ├── __init__.py
+│       │   ├── auth.py
+│       │   ├── journal.py
+│       │   ├── questionnaires.py
+│       │   └── users.py
 │       ├── schemas/
 │       │   ├── __init__.py
 │       │   ├── journal.py

@@ -1,3 +1,5 @@
+"""Business logic for user registration, authentication, and account management."""
+
 from datetime import timedelta
 
 from fastapi import HTTPException, status
@@ -24,6 +26,7 @@ from app.repository.user import (
 
 
 def get_by_id(db: Session, user_id: int) -> User:
+    """Retrieve a user by ID or raise 404 if not found."""
     user = repo_get_user_by_id(db, user_id)
     if not user:
         raise HTTPException(
@@ -34,6 +37,7 @@ def get_by_id(db: Session, user_id: int) -> User:
 
 
 def register(db: Session, username: str, email: str, password: str) -> User:
+    """Validate inputs, hash the password, and create a new user account."""
     if len(password) < 8:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -50,6 +54,7 @@ def register(db: Session, username: str, email: str, password: str) -> User:
 
 
 def login(db: Session, email: str, password: str) -> dict:
+    """Authenticate credentials and return a JWT access token."""
     user = get_user_by_email(db, email)
     if not user or not verify_password(password, user.hashed_password):
         raise HTTPException(
@@ -63,6 +68,7 @@ def login(db: Session, email: str, password: str) -> dict:
 
 
 def change_password(db: Session, user: User, current_password: str, new_password: str) -> User:
+    """Verify the current password, then update to a new one."""
     if not verify_password(current_password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -78,6 +84,7 @@ def change_password(db: Session, user: User, current_password: str, new_password
 
 
 def remove_account(db: Session, user: User, password: str) -> None:
+    """Verify the password and permanently delete the user account."""
     if not verify_password(password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

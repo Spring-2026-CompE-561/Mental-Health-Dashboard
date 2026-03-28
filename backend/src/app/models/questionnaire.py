@@ -1,3 +1,5 @@
+"""SQLAlchemy model for the questionnaires table."""
+
 from datetime import date
 
 from sqlalchemy import Column, Date, Float, ForeignKey, Integer

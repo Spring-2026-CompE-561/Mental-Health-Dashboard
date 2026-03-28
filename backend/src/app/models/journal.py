@@ -1,3 +1,5 @@
+"""SQLAlchemy model for the journals table."""
+
 from datetime import date
 
 from sqlalchemy import Column, Date, ForeignKey, Integer, String

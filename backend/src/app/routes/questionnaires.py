@@ -1,9 +1,11 @@
+"""API endpoints for questionnaire CRUD and score aggregation."""
+
 from datetime import date
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user, get_db
+from app.core.dependencies import get_current_user, get_db
 from app.models.user import User
 from app.schemas.questionnaire import (
     QuestionnaireAverageResponse,

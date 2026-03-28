@@ -1,3 +1,5 @@
+"""SQLAlchemy model for the users table."""
+
 from datetime import date
 
 from sqlalchemy import Column, Date, Integer, String
