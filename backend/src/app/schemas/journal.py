@@ -1,6 +1,8 @@
-from pydantic import BaseModel, ConfigDict
+"""Pydantic schemas for journal requests and responses."""
+
 from datetime import date
-from typing import Optional
+
+from pydantic import BaseModel, ConfigDict
 
 
 class JournalBase(BaseModel):
@@ -12,7 +14,7 @@ class JournalCreate(JournalBase):
 
 
 class JournalUpdate(BaseModel):
-    body: Optional[str] = None
+    body: str | None = None
 
 
 class JournalResponse(JournalBase):

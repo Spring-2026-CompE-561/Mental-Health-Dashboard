@@ -1,7 +1,9 @@
+"""API endpoints for user profile, password management, and account deletion."""
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user, get_db
+from app.core.dependencies import get_current_user, get_db
 from app.models.user import User
 from app.schemas.user import (
     SuccessResponse,

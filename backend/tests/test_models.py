@@ -1,12 +1,12 @@
 import pytest
 from sqlalchemy import create_engine
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 
 from app.core.database import Base
-from app.models.user import User
 from app.models.journal import Journal
 from app.models.questionnaire import Questionnaire
-
+from app.models.user import User
 
 engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
 TestingSessionLocal = sessionmaker(bind=engine)
@@ -36,7 +36,7 @@ def test_user_email_unique(db):
     db.commit()
 
     db.add(User(username="user2", email="dup@example.com", hashed_password="hash2"))
-    with pytest.raises(Exception):
+    with pytest.raises(IntegrityError):
         db.commit()
 
 
@@ -73,10 +73,12 @@ def test_user_journal_relationship(db):
     db.add(user)
     db.commit()
 
-    db.add_all([
-        Journal(user_id=user.id, body="Entry 1"),
-        Journal(user_id=user.id, body="Entry 2"),
-    ])
+    db.add_all(
+        [
+            Journal(user_id=user.id, body="Entry 1"),
+            Journal(user_id=user.id, body="Entry 2"),
+        ]
+    )
     db.commit()
     db.refresh(user)
 

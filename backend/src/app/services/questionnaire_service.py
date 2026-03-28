@@ -1,3 +1,5 @@
+"""Business logic for questionnaire creation, retrieval, and management."""
+
 from datetime import date
 
 from fastapi import HTTPException, status
@@ -24,14 +26,17 @@ from app.repository.questionnaire import (
 
 
 def create(db: Session, user: User, score: float) -> Questionnaire:
+    """Create a new questionnaire entry for the given user."""
     return repo_create(db, user_id=user.id, score=score)
 
 
 def get_all(db: Session, user: User) -> list[Questionnaire]:
+    """Return all questionnaire entries belonging to the given user."""
     return get_questionnaires_by_user(db, user_id=user.id)
 
 
 def get_one(db: Session, user: User, questionnaire_id: int) -> Questionnaire:
+    """Retrieve a single questionnaire, enforcing ownership. Raises 404 or 403."""
     entry = get_questionnaire_by_id(db, questionnaire_id)
     if not entry:
         raise HTTPException(
@@ -52,6 +57,7 @@ def average(
     from_date: date | None = None,
     to_date: date | None = None,
 ) -> dict:
+    """Compute the user's average questionnaire score, optionally within a date range."""
     avg = repo_get_average(db, user_id=user.id, from_date=from_date, to_date=to_date)
     return {
         "average_score": avg,
@@ -61,10 +67,12 @@ def average(
 
 
 def update(db: Session, user: User, questionnaire_id: int, score: float) -> Questionnaire:
+    """Update the score of an existing questionnaire, enforcing ownership."""
     entry = get_one(db, user, questionnaire_id)  # handles 404 + 403
     return repo_update(db, entry, score)
 
 
 def remove(db: Session, user: User, questionnaire_id: int) -> None:
+    """Delete a questionnaire entry, enforcing ownership."""
     entry = get_one(db, user, questionnaire_id)  # handles 404 + 403
     repo_delete(db, entry)

@@ -1,3 +1,5 @@
+"""CRUD operations for the Questionnaire model."""
+
 from datetime import date
 
 from sqlalchemy import func
@@ -7,6 +9,7 @@ from app.models.questionnaire import Questionnaire
 
 
 def create_questionnaire(db: Session, user_id: int, score: float) -> Questionnaire:
+    """Insert a new questionnaire record and return it."""
     entry = Questionnaire(
         user_id=user_id,
         score=score,
@@ -19,10 +22,12 @@ def create_questionnaire(db: Session, user_id: int, score: float) -> Questionnai
 
 
 def get_questionnaire_by_id(db: Session, questionnaire_id: int) -> Questionnaire | None:
+    """Return a questionnaire by primary key, or None if not found."""
     return db.query(Questionnaire).filter(Questionnaire.id == questionnaire_id).first()
 
 
 def get_questionnaires_by_user(db: Session, user_id: int) -> list[Questionnaire]:
+    """Return all questionnaires for a user, ordered by most recent first."""
     return (
         db.query(Questionnaire).filter(Questionnaire.user_id == user_id).order_by(Questionnaire.created_at.desc()).all()
     )
@@ -34,6 +39,7 @@ def get_average_score(
     from_date: date | None = None,
     to_date: date | None = None,
 ) -> float | None:
+    """Compute the average score for a user, optionally filtered by date range."""
     query = db.query(func.avg(Questionnaire.score)).filter(Questionnaire.user_id == user_id)
     if from_date:
         query = query.filter(Questionnaire.created_at >= from_date)
@@ -44,6 +50,7 @@ def get_average_score(
 
 
 def update_questionnaire(db: Session, questionnaire: Questionnaire, score: float) -> Questionnaire:
+    """Update the score of an existing questionnaire and return the updated record."""
     questionnaire.score = score
     db.commit()
     db.refresh(questionnaire)
@@ -51,5 +58,6 @@ def update_questionnaire(db: Session, questionnaire: Questionnaire, score: float
 
 
 def delete_questionnaire(db: Session, questionnaire: Questionnaire) -> None:
+    """Remove a questionnaire record from the database."""
     db.delete(questionnaire)
     db.commit()
