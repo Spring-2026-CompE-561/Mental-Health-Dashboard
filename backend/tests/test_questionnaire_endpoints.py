@@ -24,7 +24,7 @@ def _create_questionnaire(client, auth_headers, score=75.0):
         json={"score": score},
         headers=auth_headers,
     )
-    assert resp.status_code == 200
+    assert resp.status_code == 201
     return resp.json()
 
 

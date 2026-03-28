@@ -12,7 +12,7 @@ class Journal(Base):
     __tablename__ = "journals"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     body = Column(String, nullable=False)
     created_at = Column(Date, default=date.today)
 

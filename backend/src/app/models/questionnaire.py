@@ -12,7 +12,7 @@ class Questionnaire(Base):
     __tablename__ = "questionnaires"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     score = Column(Float)
     created_at = Column(Date, default=date.today)
 

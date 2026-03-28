@@ -8,7 +8,7 @@ class TestCreateAccount:
                 "password": "StrongPass123",
             },
         )
-        assert resp.status_code == 200
+        assert resp.status_code == 201
         data = resp.json()
         assert data["email"] == "new@example.com"
         assert data["username"] == "newuser"

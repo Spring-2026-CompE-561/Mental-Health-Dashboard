@@ -63,7 +63,7 @@ def registered_user(client):
             "password": "SecurePass123",
         },
     )
-    assert resp.status_code == 200, f"User registration failed: {resp.status_code} {resp.text}"
+    assert resp.status_code == 201, f"User registration failed: {resp.status_code} {resp.text}"
     return resp.json()
 
 

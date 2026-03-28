@@ -14,7 +14,7 @@ class JournalCreate(JournalBase):
 
 
 class JournalUpdate(BaseModel):
-    body: str | None = None
+    body: str
 
 
 class JournalResponse(JournalBase):
