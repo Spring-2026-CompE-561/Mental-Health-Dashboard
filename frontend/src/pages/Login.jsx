@@ -181,10 +181,10 @@ export default function Login() {
                   transition: 'background-color 0.2s',
                 }}
                 onMouseEnter={(e) => {
-                  if (!loading) e.target.style.backgroundColor = '#f5a0b8';
+                  if (!loading) e.currentTarget.style.backgroundColor = '#f5a0b8';
                 }}
                 onMouseLeave={(e) => {
-                  if (!loading) e.target.style.backgroundColor = '#F8B4C8';
+                  if (!loading) e.currentTarget.style.backgroundColor = '#F8B4C8';
                 }}
               >
                 {loading ? 'Signing in...' : 'Sign In'}

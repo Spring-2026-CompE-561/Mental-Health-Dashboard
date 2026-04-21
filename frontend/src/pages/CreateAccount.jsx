@@ -200,10 +200,10 @@ export default function CreateAccount() {
                   transition: 'background-color 0.2s',
                 }}
                 onMouseEnter={(e) => {
-                  if (!loading) e.target.style.backgroundColor = '#a0cce8';
+                  if (!loading) e.currentTarget.style.backgroundColor = '#a0cce8';
                 }}
                 onMouseLeave={(e) => {
-                  if (!loading) e.target.style.backgroundColor = '#B4D8F0';
+                  if (!loading) e.currentTarget.style.backgroundColor = '#B4D8F0';
                 }}
               >
                 {loading ? 'Creating account...' : 'Create Account'}

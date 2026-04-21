@@ -30,8 +30,8 @@ export default function GoogleButton({ label = 'Continue with Google' }) {
         cursor: 'pointer',
         transition: 'background-color 0.2s',
       }}
-      onMouseEnter={(e) => (e.target.style.backgroundColor = '#F9FAFB')}
-      onMouseLeave={(e) => (e.target.style.backgroundColor = '#ffffff')}
+      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F9FAFB')}
+      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#ffffff')}
     >
       <svg width="18" height="18" viewBox="0 0 18 18">
         <path
