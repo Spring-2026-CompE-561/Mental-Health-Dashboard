@@ -1,9 +1,3 @@
-"""Email delivery service with an SMTP backend and a console fallback for local development.
-
-If settings.smtp_host is blank, emails are printed to the application log instead of sent.
-This keeps local dev friction-free — you can read reset links from the uvicorn console.
-"""
-
 import logging
 import smtplib
 from email.message import EmailMessage

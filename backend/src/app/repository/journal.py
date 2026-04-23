@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.models.journal import Journal
 
+
 def get_journal_by_id(db: Session, journal_id: int) -> Journal | None:
     return db.query(Journal).filter(Journal.id == journal_id).first()
 

@@ -1,13 +1,16 @@
 from collections.abc import Generator
+
 from fastapi import Depends, HTTPException, Security, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
+
 from app.core.database import SessionLocal
 from app.core.settings import settings
 from app.models.user import User
 
 bearer_scheme = HTTPBearer()
+
 
 def get_db() -> Generator:
     db = SessionLocal()
@@ -15,6 +18,7 @@ def get_db() -> Generator:
         yield db
     finally:
         db.close()
+
 
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Security(bearer_scheme),

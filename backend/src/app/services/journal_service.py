@@ -4,9 +4,15 @@ from sqlalchemy.orm import Session
 from app.models.journal import Journal
 from app.repository.journal import (
     create_journal as repo_create_journal,
+)
+from app.repository.journal import (
     delete_journal as repo_delete_journal,
+)
+from app.repository.journal import (
     get_all_journals_by_user,
     get_journal_by_id,
+)
+from app.repository.journal import (
     update_journal as repo_update_journal,
 )
 
@@ -34,9 +40,7 @@ def create_journal(db: Session, current_user_id: int, body: str) -> Journal:
     return repo_create_journal(db, user_id=current_user_id, body=body)
 
 
-def update_journal(
-    db: Session, journal_id: int, current_user_id: int, body: str
-) -> Journal:
+def update_journal(db: Session, journal_id: int, current_user_id: int, body: str) -> Journal:
     journal = get_journal_by_id(db, journal_id)
     if not journal:
         raise HTTPException(
@@ -51,9 +55,7 @@ def update_journal(
     return repo_update_journal(db, journal, body)
 
 
-def delete_journal(
-    db: Session, journal_id: int, current_user_id: int
-) -> None:
+def delete_journal(db: Session, journal_id: int, current_user_id: int) -> None:
     journal = get_journal_by_id(db, journal_id)
     if not journal:
         raise HTTPException(
