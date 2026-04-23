@@ -1,12 +1,32 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { createAccount } from '../services/api';
-import Navbar from '../components/Navbar';
-import GradientStrip from '../components/GradientStrip';
+import AppHeader from '../components/AppHeader';
 import GoogleButton from '../components/GoogleButton';
+import { createAccount, login as loginApi } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
+
+function Field({ id, label, type = 'text', value, onChange, placeholder, required = true }) {
+  return (
+    <div className="flex flex-col gap-2">
+      <label htmlFor={id} className="font-bold text-[13px] md:text-[14px] text-[#555] ml-1">
+        {label}
+      </label>
+      <input
+        id={id}
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        required={required}
+        className="w-full h-[52px] md:h-[56px] border border-gray-100 rounded-2xl bg-gray-50 focus:bg-white focus:border-[#b2def9] focus:ring-4 focus:ring-[#b2def9]/10 focus:outline-none px-5 text-[14px] md:text-[15px] text-[#333] placeholder:text-[#aaa] transition-all"
+      />
+    </div>
+  );
+}
 
 export default function CreateAccount() {
   const navigate = useNavigate();
+  const { signIn } = useAuth();
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -18,245 +38,120 @@ export default function CreateAccount() {
     e.preventDefault();
     setError('');
 
+    if (username.trim().length < 3) {
+      setError('Username must be at least 3 characters.');
+      return;
+    }
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters.');
+      return;
+    }
     if (password !== confirmPassword) {
       setError('Passwords do not match.');
       return;
     }
 
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters.');
-      return;
-    }
-
-    if (username.trim().length < 3) {
-      setError('Username must be at least 3 characters.');
-      return;
-    }
-
     setLoading(true);
-
     try {
       await createAccount({ username: username.trim(), email, password });
-      navigate('/login', { state: { registered: true } });
+      // Auto-login after successful registration so the user lands on the dashboard.
+      const data = await loginApi({ email, password });
+      signIn(data.access_token);
+      navigate('/dashboard');
     } catch (err) {
       const detail = err.response?.data?.detail;
       if (Array.isArray(detail)) {
         setError(detail.map((d) => d.msg).join('. '));
       } else {
-        setError(
-          typeof detail === 'string' ? detail : 'Registration failed. Try again.'
-        );
+        setError(typeof detail === 'string' ? detail : 'Registration failed. Try again.');
       }
-    } finally {
       setLoading(false);
     }
   }
 
-  const inputStyle = {
-    width: '100%',
-    padding: '12px 16px',
-    borderRadius: '8px',
-    border: '1px solid #E5E7EB',
-    backgroundColor: '#ffffff',
-    fontSize: '14px',
-    color: '#333333',
-    outline: 'none',
-    boxSizing: 'border-box',
-    transition: 'border-color 0.2s',
-  };
-
-  const labelStyle = {
-    display: 'block',
-    fontSize: '14px',
-    fontWeight: '500',
-    color: '#333333',
-    marginBottom: '8px',
-  };
-
-  function handleFocus(e) {
-    e.target.style.borderColor = '#B4D8F0';
-  }
-
-  function handleBlur(e) {
-    e.target.style.borderColor = '#E5E7EB';
-  }
-
   return (
-    <div className="min-h-screen bg-bg flex flex-col">
-      <Navbar rightLink={{ to: '/login', label: 'Login' }} />
+    <div className="flex flex-col relative w-full min-h-screen bg-[#Fafbfb]">
+      <AppHeader links={[{ label: 'Login', to: '/login' }]} />
 
-      <div className="flex-1 flex items-center justify-center px-4 py-10">
-        <div
-          className="w-full overflow-hidden"
-          style={{
-            maxWidth: '420px',
-            borderRadius: '16px',
-            boxShadow: '0 4px 24px rgba(0, 0, 0, 0.08)',
-            backgroundColor: '#ffffff',
-          }}
-        >
-          <GradientStrip />
-
-          <div style={{ padding: '36px 36px 32px' }}>
-            <h1
-              style={{
-                fontSize: '24px',
-                fontWeight: '700',
-                textAlign: 'center',
-                color: '#333333',
-                marginBottom: '28px',
-              }}
-            >
-              Create Account
-            </h1>
-
-            {error && (
-              <div
-                style={{
-                  marginBottom: '20px',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  backgroundColor: '#FEF2F2',
-                  color: '#DC2626',
-                  fontSize: '14px',
-                  textAlign: 'center',
-                }}
-              >
-                {error}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit}>
-              <div style={{ marginBottom: '18px' }}>
-                <label style={labelStyle}>Username</label>
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Choose a username"
-                  required
-                  style={inputStyle}
-                  onFocus={handleFocus}
-                  onBlur={handleBlur}
-                />
-              </div>
-
-              <div style={{ marginBottom: '18px' }}>
-                <label style={labelStyle}>Email</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
-                  required
-                  style={inputStyle}
-                  onFocus={handleFocus}
-                  onBlur={handleBlur}
-                />
-              </div>
-
-              <div style={{ marginBottom: '18px' }}>
-                <label style={labelStyle}>Password</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  style={inputStyle}
-                  onFocus={handleFocus}
-                  onBlur={handleBlur}
-                />
-              </div>
-
-              <div style={{ marginBottom: '24px' }}>
-                <label style={labelStyle}>Confirm Password</label>
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  style={inputStyle}
-                  onFocus={handleFocus}
-                  onBlur={handleBlur}
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                style={{
-                  width: '100%',
-                  padding: '14px',
-                  borderRadius: '8px',
-                  backgroundColor: '#B4D8F0',
-                  color: '#ffffff',
-                  fontWeight: '600',
-                  fontSize: '14px',
-                  border: 'none',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  opacity: loading ? 0.6 : 1,
-                  transition: 'background-color 0.2s',
-                }}
-                onMouseEnter={(e) => {
-                  if (!loading) e.currentTarget.style.backgroundColor = '#a0cce8';
-                }}
-                onMouseLeave={(e) => {
-                  if (!loading) e.currentTarget.style.backgroundColor = '#B4D8F0';
-                }}
-              >
-                {loading ? 'Creating account...' : 'Create Account'}
-              </button>
-            </form>
-
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                margin: '24px 0',
-              }}
-            >
-              <div style={{ flex: 1, height: '1px', backgroundColor: '#E5E7EB' }} />
-              <span
-                style={{
-                  fontSize: '12px',
-                  color: '#999999',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                }}
-              >
-                or
-              </span>
-              <div style={{ flex: 1, height: '1px', backgroundColor: '#E5E7EB' }} />
-            </div>
-
-            <GoogleButton label="Sign up with Google" />
-
-            <p
-              style={{
-                textAlign: 'center',
-                fontSize: '14px',
-                color: '#666666',
-                marginTop: '24px',
-              }}
-            >
-              Already have an account?{' '}
-              <Link
-                to="/login"
-                style={{
-                  color: '#F8B4C8',
-                  fontWeight: '500',
-                  textDecoration: 'none',
-                }}
-              >
-                Login
-              </Link>
-            </p>
+      <main className="flex-1 w-full flex items-start md:items-center justify-center px-4 md:px-0 pb-10">
+        <div className="w-full max-w-[400px] md:max-w-[480px] bg-white border border-gray-100 rounded-[28px] md:rounded-[32px] p-6 md:p-12 shadow-sm flex flex-col gap-6 md:gap-[28px] relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-[6px] flex">
+            <div className="flex-1 bg-[#f9b2d7]" />
+            <div className="flex-1 bg-[#b2def9]" />
+            <div className="flex-1 bg-[#b2f9c8]" />
+            <div className="flex-1 bg-[#f9f0b2]" />
           </div>
+
+          <h1 className="font-bold text-[32px] md:text-[40px] text-[#222] tracking-tight m-0 text-center pt-2">
+            Create Account
+          </h1>
+
+          {error && (
+            <div className="px-4 py-3 rounded-xl bg-red-50 text-red-600 text-sm text-center">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4 md:gap-5">
+            <Field
+              id="username"
+              label="Username"
+              value={username}
+              onChange={setUsername}
+              placeholder="Choose a username"
+            />
+            <Field
+              id="email"
+              label="Email"
+              type="email"
+              value={email}
+              onChange={setEmail}
+              placeholder="Enter your email"
+            />
+            <Field
+              id="password"
+              label="Password"
+              type="password"
+              value={password}
+              onChange={setPassword}
+              placeholder="••••••••"
+            />
+            <Field
+              id="confirm-password"
+              label="Confirm Password"
+              type="password"
+              value={confirmPassword}
+              onChange={setConfirmPassword}
+              placeholder="••••••••"
+            />
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="bg-[#b2def9] rounded-2xl shadow-md flex items-center justify-center w-full h-[56px] md:h-[60px] mt-2 hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed border-none cursor-pointer"
+            >
+              <span className="font-bold text-[18px] md:text-[20px] text-white tracking-wide">
+                {loading ? 'Creating account…' : 'Create Account'}
+              </span>
+            </button>
+          </form>
+
+          <div className="flex items-center gap-4 w-full">
+            <div className="flex-1 h-px bg-gray-100" />
+            <span className="font-bold text-[12px] text-[#BBB]">OR</span>
+            <div className="flex-1 h-px bg-gray-100" />
+          </div>
+
+          <GoogleButton label="Sign up with Google" />
+
+          <p className="text-center font-medium text-[14px] md:text-[16px] text-[#888] m-0">
+            Already have an account?{' '}
+            <Link to="/login" className="font-bold text-[#b2def9] hover:underline">
+              Login
+            </Link>
+          </p>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
