@@ -1,12 +1,17 @@
+import { useState } from 'react';
 import { getGoogleAuthUrl } from '../services/api';
 
 export default function GoogleButton({ label = 'Continue with Google' }) {
+  const [loading, setLoading] = useState(false);
+
   async function handleGoogleLogin() {
+    setLoading(true);
     try {
       const data = await getGoogleAuthUrl();
       window.location.href = data.url;
     } catch (err) {
       console.error('Google auth error:', err);
+      setLoading(false);
     }
   }
 
@@ -14,44 +19,18 @@ export default function GoogleButton({ label = 'Continue with Google' }) {
     <button
       type="button"
       onClick={handleGoogleLogin}
-      style={{
-        width: '100%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '12px',
-        padding: '12px 16px',
-        borderRadius: '8px',
-        border: '1px solid #DADCE0',
-        backgroundColor: '#ffffff',
-        color: '#333333',
-        fontSize: '14px',
-        fontWeight: '500',
-        cursor: 'pointer',
-        transition: 'background-color 0.2s',
-      }}
-      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F9FAFB')}
-      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#ffffff')}
+      disabled={loading}
+      className="w-full h-[56px] md:h-[60px] border border-gray-200 rounded-2xl bg-white hover:bg-gray-50 hover:border-[#b2def9] flex items-center justify-center gap-3 md:gap-4 shadow-sm transition-colors disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
     >
-      <svg width="18" height="18" viewBox="0 0 18 18">
-        <path
-          d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"
-          fill="#4285F4"
-        />
-        <path
-          d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"
-          fill="#34A853"
-        />
-        <path
-          d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.997 8.997 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"
-          fill="#FBBC05"
-        />
-        <path
-          d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"
-          fill="#EA4335"
-        />
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M22.56 12.25C22.56 11.47 22.49 10.72 22.36 10H12V14.26H17.92C17.66 15.63 16.88 16.79 15.71 17.57V20.34H19.28C21.36 18.42 22.56 15.6 22.56 12.25Z" fill="#4285F4" />
+        <path d="M12 23C14.97 23 17.46 22.02 19.28 20.34L15.71 17.57C14.72 18.23 13.47 18.63 12 18.63C9.15 18.63 6.74 16.71 5.86 14.14H2.18V16.99C3.99 20.59 7.69 23 12 23Z" fill="#34A853" />
+        <path d="M5.86 14.14C5.64 13.47 5.51 12.75 5.51 12C5.51 11.25 5.63 10.53 5.86 9.86V7.01H2.18C1.43 8.5 1 10.19 1 12C1 13.81 1.43 15.5 2.18 16.99L5.86 14.14Z" fill="#FBBC05" />
+        <path d="M12 5.38C13.62 5.38 15.06 5.93 16.2 7.02L19.36 3.86C17.45 2.08 14.97 1 12 1C7.69 1 3.99 3.41 2.18 7.01L5.86 9.86C6.74 7.29 9.15 5.38 12 5.38Z" fill="#EA4335" />
       </svg>
-      {label}
+      <span className="font-semibold text-[16px] md:text-[18px] text-[#444] tracking-tight">
+        {loading ? 'Redirecting…' : label}
+      </span>
     </button>
   );
 }

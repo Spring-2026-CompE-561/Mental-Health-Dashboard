@@ -1,157 +1,101 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import Navbar from '../components/Navbar';
-import GradientStrip from '../components/GradientStrip';
+import AppHeader from '../components/AppHeader';
+import { forgotPassword } from '../services/api';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
-    setSubmitted(true);
+    setError('');
+    setLoading(true);
+    try {
+      await forgotPassword({ email });
+      setSubmitted(true);
+    } catch (err) {
+      // The backend always returns success, so an error here is likely network-level.
+      setError('Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
-    <div className="min-h-screen bg-bg flex flex-col">
-      <Navbar rightLink={{ to: '/create-account', label: 'Register' }} />
+    <div className="flex flex-col relative w-full min-h-screen bg-[#Fafbfb]">
+      <AppHeader links={[{ label: 'Register', to: '/create-account' }]} />
 
-      <div className="flex-1 flex items-center justify-center px-4 py-10">
-        <div
-          className="w-full overflow-hidden"
-          style={{
-            maxWidth: '420px',
-            borderRadius: '16px',
-            boxShadow: '0 4px 24px rgba(0, 0, 0, 0.08)',
-            backgroundColor: '#ffffff',
-          }}
-        >
-          <GradientStrip />
+      <main className="flex-1 w-full flex items-center justify-center p-[40px]">
+        <div className="w-full max-w-[480px] bg-white border border-gray-100 rounded-[32px] p-[48px] shadow-sm flex flex-col gap-[32px] relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-[6px] flex">
+            <div className="flex-1 bg-[#f9b2d7]" />
+            <div className="flex-1 bg-[#b2def9]" />
+            <div className="flex-1 bg-[#b2f9c8]" />
+            <div className="flex-1 bg-[#f9f0b2]" />
+          </div>
 
-          <div style={{ padding: '40px 36px 36px' }}>
-            <h1
-              style={{
-                fontSize: '24px',
-                fontWeight: '700',
-                textAlign: 'center',
-                color: '#333333',
-                marginBottom: '12px',
-              }}
-            >
+          <div className="flex flex-col gap-[12px] items-center text-center">
+            <h1 className="font-semibold text-[36px] text-[#222] tracking-tight m-0">
               Forgot password?
             </h1>
-            <p
-              style={{
-                textAlign: 'center',
-                fontSize: '14px',
-                color: '#666666',
-                marginBottom: '32px',
-                lineHeight: '1.5',
-              }}
-            >
-              Enter your email address below and we&apos;ll send you a link to
-              reset your password.
-            </p>
-
-            {submitted ? (
-              <div
-                style={{
-                  padding: '14px',
-                  borderRadius: '8px',
-                  backgroundColor: '#F0FDF4',
-                  color: '#15803D',
-                  fontSize: '14px',
-                  textAlign: 'center',
-                  marginBottom: '24px',
-                }}
-              >
-                If an account exists with that email, a reset link has been sent.
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit}>
-                <div style={{ marginBottom: '24px' }}>
-                  <label
-                    style={{
-                      display: 'block',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      color: '#333333',
-                      marginBottom: '8px',
-                    }}
-                  >
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email"
-                    required
-                    style={{
-                      width: '100%',
-                      padding: '12px 16px',
-                      borderRadius: '8px',
-                      border: '1px solid #E5E7EB',
-                      backgroundColor: '#ffffff',
-                      fontSize: '14px',
-                      color: '#333333',
-                      outline: 'none',
-                      boxSizing: 'border-box',
-                      transition: 'border-color 0.2s',
-                    }}
-                    onFocus={(e) => (e.target.style.borderColor = '#F8B4C8')}
-                    onBlur={(e) => (e.target.style.borderColor = '#E5E7EB')}
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  style={{
-                    width: '100%',
-                    padding: '14px',
-                    borderRadius: '8px',
-                    backgroundColor: '#F8B4C8',
-                    color: '#ffffff',
-                    fontWeight: '600',
-                    fontSize: '14px',
-                    border: 'none',
-                    cursor: 'pointer',
-                    transition: 'background-color 0.2s',
-                  }}
-                  onMouseEnter={(e) =>
-                    (e.target.style.backgroundColor = '#f5a0b8')
-                  }
-                  onMouseLeave={(e) =>
-                    (e.target.style.backgroundColor = '#F8B4C8')
-                  }
-                >
-                  Send Reset Link
-                </button>
-              </form>
-            )}
-
-            <p
-              style={{
-                textAlign: 'center',
-                fontSize: '14px',
-                color: '#666666',
-                marginTop: '28px',
-              }}
-            >
-              <Link
-                to="/login"
-                style={{
-                  color: '#F8B4C8',
-                  fontWeight: '500',
-                  textDecoration: 'none',
-                }}
-              >
-                Back to Login
-              </Link>
+            <p className="font-normal text-[16px] text-[#555] m-0 leading-relaxed max-w-[320px]">
+              Enter your email address below and we&apos;ll send you a link to reset your password.
             </p>
           </div>
+
+          {submitted ? (
+            <div className="px-4 py-4 rounded-xl bg-green-50 text-green-700 text-sm text-center leading-relaxed">
+              If an account exists with that email, a reset link has been sent. Check your inbox
+              (and spam folder).
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="flex flex-col gap-[24px] mt-[8px]">
+              {error && (
+                <div className="px-4 py-3 rounded-xl bg-red-50 text-red-600 text-sm text-center">
+                  {error}
+                </div>
+              )}
+
+              <div className="flex flex-col gap-[8px]">
+                <label htmlFor="email" className="font-medium text-[14px] text-[#555]">
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  required
+                  className="w-full h-[56px] border border-gray-200 rounded-[16px] bg-gray-50 focus:border-[#b2def9] focus:bg-white focus:outline-none px-[20px] text-[16px] text-[#333] placeholder:text-[#aaa] transition-colors"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="bg-[#b2def9] rounded-[16px] shadow-[0px_8px_24px_rgba(178,222,249,0.4)] flex items-center justify-center w-full h-[60px] mt-[8px] hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed border-none cursor-pointer"
+              >
+                <span className="font-semibold text-[20px] text-white tracking-wide">
+                  {loading ? 'Sending…' : 'Send Reset Link'}
+                </span>
+              </button>
+            </form>
+          )}
+
+          <div className="w-full flex justify-center">
+            <Link
+              to="/login"
+              className="font-medium text-[16px] text-[#555] hover:text-[#f9b2d7] transition-colors"
+            >
+              Back to Login
+            </Link>
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

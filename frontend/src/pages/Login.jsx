@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { login } from '../services/api';
-import Navbar from '../components/Navbar';
-import GradientStrip from '../components/GradientStrip';
+import AppHeader from '../components/AppHeader';
 import GoogleButton from '../components/GoogleButton';
+import { login as loginApi } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Login() {
   const navigate = useNavigate();
+  const { signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -16,228 +17,110 @@ export default function Login() {
     e.preventDefault();
     setError('');
     setLoading(true);
-
     try {
-      const data = await login({ email, password });
-      localStorage.setItem('access_token', data.access_token);
+      const data = await loginApi({ email, password });
+      signIn(data.access_token);
       navigate('/dashboard');
     } catch (err) {
       const detail = err.response?.data?.detail;
-      setError(
-        typeof detail === 'string' ? detail : 'Login failed. Check your credentials.'
-      );
+      setError(typeof detail === 'string' ? detail : 'Login failed. Check your credentials.');
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="min-h-screen bg-bg flex flex-col">
-      <Navbar rightLink={{ to: '/create-account', label: 'Create Account' }} />
+    <div className="flex flex-col relative w-full min-h-screen bg-[#Fafbfb]">
+      <AppHeader links={[{ label: 'Create Account', to: '/create-account' }]} />
 
-      <div className="flex-1 flex items-center justify-center px-4 py-10">
-        <div
-          className="w-full overflow-hidden"
-          style={{
-            maxWidth: '420px',
-            borderRadius: '16px',
-            boxShadow: '0 4px 24px rgba(0, 0, 0, 0.08)',
-            backgroundColor: '#ffffff',
-          }}
-        >
-          <GradientStrip />
+      <main className="flex-1 w-full flex items-center justify-center p-[24px] md:p-[40px]">
+        <div className="w-full max-w-[520px] bg-white border border-gray-100 rounded-[32px] md:rounded-[40px] p-[32px] md:p-[56px] shadow-sm flex flex-col gap-[28px] md:gap-[40px] relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-[8px] flex">
+            <div className="flex-1 bg-[#f9b2d7]" />
+            <div className="flex-1 bg-[#b2def9]" />
+            <div className="flex-1 bg-[#b2f9c8]" />
+            <div className="flex-1 bg-[#f9f0b2]" />
+          </div>
 
-          <div style={{ padding: '40px 36px 36px' }}>
-            <h1
-              style={{
-                fontSize: '24px',
-                fontWeight: '700',
-                textAlign: 'center',
-                color: '#333333',
-                marginBottom: '32px',
-              }}
-            >
-              Login
-            </h1>
+          <h1 className="font-bold text-[36px] md:text-[48px] text-[#222] tracking-tight m-0 text-center">
+            Login
+          </h1>
 
-            {error && (
-              <div
-                style={{
-                  marginBottom: '20px',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  backgroundColor: '#FEF2F2',
-                  color: '#DC2626',
-                  fontSize: '14px',
-                  textAlign: 'center',
-                }}
-              >
-                {error}
-              </div>
-            )}
+          {error && (
+            <div className="px-4 py-3 rounded-xl bg-red-50 text-red-600 text-sm text-center">
+              {error}
+            </div>
+          )}
 
-            <form onSubmit={handleSubmit}>
-              <div style={{ marginBottom: '20px' }}>
-                <label
-                  style={{
-                    display: 'block',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    color: '#333333',
-                    marginBottom: '8px',
-                  }}
-                >
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    borderRadius: '8px',
-                    border: '1px solid #E5E7EB',
-                    backgroundColor: '#ffffff',
-                    fontSize: '14px',
-                    color: '#333333',
-                    outline: 'none',
-                    boxSizing: 'border-box',
-                    transition: 'border-color 0.2s',
-                  }}
-                  onFocus={(e) => (e.target.style.borderColor = '#F8B4C8')}
-                  onBlur={(e) => (e.target.style.borderColor = '#E5E7EB')}
-                />
-              </div>
-
-              <div style={{ marginBottom: '24px' }}>
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    marginBottom: '8px',
-                  }}
-                >
-                  <label
-                    style={{
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      color: '#333333',
-                    }}
-                  >
-                    Password
-                  </label>
-                  <Link
-                    to="/forgot-password"
-                    style={{
-                      fontSize: '12px',
-                      color: '#F8B4C8',
-                      textDecoration: 'none',
-                    }}
-                  >
-                    Forgot?
-                  </Link>
-                </div>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    borderRadius: '8px',
-                    border: '1px solid #E5E7EB',
-                    backgroundColor: '#ffffff',
-                    fontSize: '14px',
-                    color: '#333333',
-                    outline: 'none',
-                    boxSizing: 'border-box',
-                    transition: 'border-color 0.2s',
-                  }}
-                  onFocus={(e) => (e.target.style.borderColor = '#F8B4C8')}
-                  onBlur={(e) => (e.target.style.borderColor = '#E5E7EB')}
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                style={{
-                  width: '100%',
-                  padding: '14px',
-                  borderRadius: '8px',
-                  backgroundColor: '#F8B4C8',
-                  color: '#ffffff',
-                  fontWeight: '600',
-                  fontSize: '14px',
-                  border: 'none',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  opacity: loading ? 0.6 : 1,
-                  transition: 'background-color 0.2s',
-                }}
-                onMouseEnter={(e) => {
-                  if (!loading) e.currentTarget.style.backgroundColor = '#f5a0b8';
-                }}
-                onMouseLeave={(e) => {
-                  if (!loading) e.currentTarget.style.backgroundColor = '#F8B4C8';
-                }}
-              >
-                {loading ? 'Signing in...' : 'Sign In'}
-              </button>
-            </form>
-
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                margin: '24px 0',
-              }}
-            >
-              <div style={{ flex: 1, height: '1px', backgroundColor: '#E5E7EB' }} />
-              <span
-                style={{
-                  fontSize: '12px',
-                  color: '#999999',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                }}
-              >
-                or
-              </span>
-              <div style={{ flex: 1, height: '1px', backgroundColor: '#E5E7EB' }} />
+          <form onSubmit={handleSubmit} className="flex flex-col gap-[24px] md:gap-[28px]">
+            <div className="flex flex-col gap-[10px]">
+              <label htmlFor="email" className="font-semibold text-[16px] text-[#555] ml-1">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
+                required
+                className="w-full h-[60px] border border-gray-200 rounded-[20px] bg-[#fdfdfd] px-[20px] text-[16px] text-[#333] placeholder:text-[#aaa] focus:border-[#b2def9] focus:ring-4 focus:ring-[#b2def9]/10 focus:outline-none focus:bg-white transition-all"
+              />
             </div>
 
-            <GoogleButton label="Continue with Google" />
+            <div className="flex flex-col gap-[10px]">
+              <div className="flex justify-between items-center ml-1">
+                <label htmlFor="password" className="font-semibold text-[16px] text-[#555]">
+                  Password
+                </label>
+                <Link
+                  to="/forgot-password"
+                  className="text-[14px] font-medium text-[#b2def9] hover:text-[#f9b2d7]"
+                >
+                  Forgot?
+                </Link>
+              </div>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                className="w-full h-[60px] border border-gray-200 rounded-[20px] bg-[#fdfdfd] px-[20px] text-[16px] text-[#333] placeholder:text-[#aaa] focus:border-[#b2def9] focus:ring-4 focus:ring-[#b2def9]/10 focus:outline-none focus:bg-white transition-all"
+              />
+            </div>
 
-            <p
-              style={{
-                textAlign: 'center',
-                fontSize: '14px',
-                color: '#666666',
-                marginTop: '24px',
-              }}
+            <button
+              type="submit"
+              disabled={loading}
+              className="bg-[#f9b2d7] rounded-[20px] shadow-[0px_10px_25px_rgba(249,178,215,0.4)] flex items-center justify-center w-full h-[64px] mt-[4px] hover:-translate-y-0.5 hover:shadow-[0px_12px_30px_rgba(249,178,215,0.5)] transition-all disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none cursor-pointer border-none"
             >
-              Don&apos;t have an account yet?{' '}
-              <Link
-                to="/create-account"
-                style={{
-                  color: '#F8B4C8',
-                  fontWeight: '500',
-                  textDecoration: 'none',
-                }}
-              >
-                Create Account
-              </Link>
-            </p>
+              <span className="font-bold text-[20px] text-white tracking-wide">
+                {loading ? 'Signing in…' : 'Sign In'}
+              </span>
+            </button>
+          </form>
+
+          <div className="flex items-center gap-[20px] w-full px-4">
+            <div className="flex-1 h-px bg-gray-100" />
+            <span className="font-bold text-[14px] text-[#ccc] tracking-widest uppercase">OR</span>
+            <div className="flex-1 h-px bg-gray-100" />
           </div>
+
+          <GoogleButton label="Continue with Google" />
+
+          <p className="text-center font-medium text-[16px] text-[#666] m-0">
+            Don&apos;t have an account yet?{' '}
+            <Link
+              to="/create-account"
+              className="font-bold text-[#b2def9] hover:text-[#f9b2d7] transition-colors"
+            >
+              Create Account
+            </Link>
+          </p>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

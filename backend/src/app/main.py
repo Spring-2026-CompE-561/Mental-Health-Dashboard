@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 import app.models  # noqa: F401  — force all ORM models to register with Base
 from app.core.database import create_tables
+from app.core.settings import settings
 from app.routes import auth, journal, questionnaires, users
 
 logging.basicConfig(level=logging.INFO)
@@ -30,10 +31,15 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS middleware for React frontend
+# CORS middleware — allow the Vite dev server (default 5173) plus CRA-style 3000 for flexibility
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[
+        settings.frontend_url,
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:3000",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
