@@ -1,5 +1,3 @@
-"""Business logic for password-reset token creation and redemption."""
-
 import secrets
 from datetime import datetime, timedelta
 

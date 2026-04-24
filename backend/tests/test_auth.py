@@ -27,16 +27,12 @@ class TestPasswordHashing:
 class TestJWT:
     def test_create_access_token_structure(self):
         token = create_access_token(data={"sub": "42"})
-        payload = jwt.decode(
-            token, settings.secret_key, algorithms=[settings.algorithm]
-        )
+        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
         assert payload["sub"] == "42"
         assert "exp" in payload
 
     def test_token_contains_custom_data(self):
         token = create_access_token(data={"sub": "99", "role": "admin"})
-        payload = jwt.decode(
-            token, settings.secret_key, algorithms=[settings.algorithm]
-        )
+        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
         assert payload["sub"] == "99"
         assert payload["role"] == "admin"

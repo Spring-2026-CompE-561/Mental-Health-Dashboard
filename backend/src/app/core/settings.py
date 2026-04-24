@@ -20,11 +20,11 @@ class Settings(BaseSettings):
     google_redirect_uri: str = "http://localhost:8000/api/auth/google/callback"
 
     # Password-reset email (optional — if smtp_host is blank, we log the reset link to the console)
-    smtp_host: str = ""
+    smtp_host: str = "smtp.gmail.com"
     smtp_port: int = 587
-    smtp_username: str = ""
-    smtp_password: str = ""
-    smtp_from_email: str = "no-reply@mental-health-dashboard.local"
+    smtp_username: str
+    smtp_password: str
+    smtp_from_email: str
     smtp_use_tls: bool = True
 
     # How long a password-reset token is valid (minutes)

@@ -1,4 +1,3 @@
-import pytest
 from app.repository.journal import (
     create_journal,
     delete_journal,
@@ -10,17 +9,13 @@ from app.repository.journal import (
 
 class TestJournalRepository:
     def test_create_journal(self, db_session, registered_user):
-        journal = create_journal(
-            db_session, user_id=registered_user["id"], body="Today was good"
-        )
+        journal = create_journal(db_session, user_id=registered_user["id"], body="Today was good")
         assert journal.id is not None
         assert journal.body == "Today was good"
         assert journal.user_id == registered_user["id"]
 
     def test_get_journal_by_id(self, db_session, registered_user):
-        journal = create_journal(
-            db_session, user_id=registered_user["id"], body="Test entry"
-        )
+        journal = create_journal(db_session, user_id=registered_user["id"], body="Test entry")
         fetched = get_journal_by_id(db_session, journal.id)
         assert fetched is not None
         assert fetched.body == "Test entry"
@@ -39,19 +34,15 @@ class TestJournalRepository:
         create_journal(db_session, user_id=registered_user["id"], body="First")
         create_journal(db_session, user_id=registered_user["id"], body="Second")
         journals = get_all_journals_by_user(db_session, registered_user["id"])
-        assert len(journals) == 2  
+        assert len(journals) == 2
 
     def test_update_journal(self, db_session, registered_user):
-        journal = create_journal(
-            db_session, user_id=registered_user["id"], body="Original"
-        )
+        journal = create_journal(db_session, user_id=registered_user["id"], body="Original")
         updated = update_journal(db_session, journal, "Updated body")
         assert updated.body == "Updated body"
 
     def test_delete_journal(self, db_session, registered_user):
-        journal = create_journal(
-            db_session, user_id=registered_user["id"], body="To be deleted"
-        )
+        journal = create_journal(db_session, user_id=registered_user["id"], body="To be deleted")
         jid = journal.id
         delete_journal(db_session, journal)
         assert get_journal_by_id(db_session, jid) is None
