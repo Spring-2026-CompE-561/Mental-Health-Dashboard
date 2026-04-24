@@ -163,7 +163,7 @@ function buildChartForPeriod(period, questionnaires) {
 // regardless of container aspect ratio.
 // ──────────────────────────────────────────────────────────
 
-function MoodChart({ data, ticks }) {
+function MoodChart({ data, ticks, accentColor = '#b2def9', gradientId = 'moodGradient', emptyMessage = 'No mood data for this period — log your mood to start the chart.' }) {
   const n = data.length;
 
   // X positions as percentages, inset slightly from the edges so circles don't get clipped.
@@ -228,15 +228,15 @@ function MoodChart({ data, ticks }) {
               preserveAspectRatio="none"
             >
               <defs>
-                <linearGradient id="moodGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#b2def9" stopOpacity="0.25" />
-                  <stop offset="100%" stopColor="#b2def9" stopOpacity="0" />
+                <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={accentColor} stopOpacity="0.25" />
+                  <stop offset="100%" stopColor={accentColor} stopOpacity="0" />
                 </linearGradient>
               </defs>
-              <path d={areaPath} fill="url(#moodGradient)" />
+              <path d={areaPath} fill={`url(#${gradientId})`} />
               <path
                 d={linePath}
-                stroke="#b2def9"
+                stroke={accentColor}
                 strokeWidth="0.6"
                 fill="none"
                 strokeLinecap="round"
@@ -265,7 +265,7 @@ function MoodChart({ data, ticks }) {
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <p className="text-[#aaa] text-center">
-              No mood data for this period — log your mood to start the chart.
+              {emptyMessage}
             </p>
           </div>
         )}
@@ -293,6 +293,80 @@ function MoodChart({ data, ticks }) {
       </div>
     </div>
   );
+}
+
+// ──────────────────────────────────────────────────────────
+// Positivity-score chart data builders (journal sentiment)
+// ──────────────────────────────────────────────────────────
+
+function buildPositivityWeek(journals) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const start = daysAgo(6);
+  const byDate = new Map();
+  for (const j of journals) {
+    if (j.sentiment_score == null) continue;
+    const key = j.created_at;
+    if (!byDate.has(key)) byDate.set(key, []);
+    byDate.get(key).push(j.sentiment_score);
+  }
+  const data = []; const ticks = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(start); d.setDate(start.getDate() + i);
+    const key = toISODate(d);
+    const scores = byDate.get(key);
+    data.push({ score: scores ? scores.reduce((a,b)=>a+b,0)/scores.length : null });
+    ticks.push({ index: i, primary: d.toLocaleDateString('en-US',{weekday:'short'}).toUpperCase(), secondary: d.toLocaleDateString('en-US',{month:'short',day:'numeric'}) });
+  }
+  return { data, ticks, startDate: start, endDate: today };
+}
+
+function buildPositivityMonth(journals) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const start = daysAgo(29);
+  const byDate = new Map();
+  for (const j of journals) {
+    if (j.sentiment_score == null) continue;
+    const key = j.created_at;
+    if (!byDate.has(key)) byDate.set(key, []);
+    byDate.get(key).push(j.sentiment_score);
+  }
+  const data = []; const ticks = [];
+  for (let i = 0; i < 30; i++) {
+    const d = new Date(start); d.setDate(start.getDate() + i);
+    const key = toISODate(d);
+    const scores = byDate.get(key);
+    data.push({ score: scores ? scores.reduce((a,b)=>a+b,0)/scores.length : null });
+    if (i % 5 === 0 || i === 29) {
+      ticks.push({ index: i, primary: d.toLocaleDateString('en-US',{weekday:'short'}).toUpperCase(), secondary: d.toLocaleDateString('en-US',{month:'short',day:'numeric'}) });
+    }
+  }
+  return { data, ticks, startDate: start, endDate: today };
+}
+
+function buildPositivityYear(journals) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const firstMonth = addMonths(new Date(today.getFullYear(), today.getMonth(), 1), -11);
+  const sums = new Array(12).fill(0); const counts = new Array(12).fill(0);
+  for (const j of journals) {
+    if (j.sentiment_score == null) continue;
+    const d = toLocalDate(j.created_at);
+    const diff = (d.getFullYear()-firstMonth.getFullYear())*12+(d.getMonth()-firstMonth.getMonth());
+    if (diff >= 0 && diff < 12) { sums[diff] += j.sentiment_score; counts[diff]++; }
+  }
+  const data = []; const ticks = [];
+  for (let i = 0; i < 12; i++) {
+    const ms = addMonths(firstMonth, i);
+    data.push({ score: counts[i] > 0 ? sums[i]/counts[i] : null });
+    ticks.push({ index: i, primary: ms.toLocaleDateString('en-US',{month:'short'}).toUpperCase(), secondary: `'${String(ms.getFullYear()).slice(-2)}` });
+  }
+  const endDate = addMonths(firstMonth, 11); endDate.setMonth(endDate.getMonth()+1); endDate.setDate(0);
+  return { data, ticks, startDate: firstMonth, endDate };
+}
+
+function buildPositivityChart(period, journals) {
+  if (period === 'month') return buildPositivityMonth(journals);
+  if (period === 'year') return buildPositivityYear(journals);
+  return buildPositivityWeek(journals);
 }
 
 // ──────────────────────────────────────────────────────────
@@ -325,6 +399,7 @@ export default function Dashboard() {
   const [loadingChart, setLoadingChart] = useState(true);
   const [loadingJournals, setLoadingJournals] = useState(true);
   const [error, setError] = useState('');
+  const [positivityPeriod, setPositivityPeriod] = useState('week');
 
   // Fetch questionnaires scoped to the selected period. Refetches whenever the period changes.
   useEffect(() => {
@@ -383,6 +458,11 @@ export default function Dashboard() {
     [chart.startDate, chart.endDate, period]
   );
   const recentJournals = journals.slice(0, 3);
+  const positivityChart = useMemo(() => buildPositivityChart(positivityPeriod, journals), [positivityPeriod, journals]);
+  const positivityRangeLabel = useMemo(
+    () => formatRange(positivityChart.startDate, positivityChart.endDate, positivityPeriod),
+    [positivityChart.startDate, positivityChart.endDate, positivityPeriod]
+  );
   const displayName = user?.username || 'there';
 
   return (
@@ -506,6 +586,56 @@ export default function Dashboard() {
                 View All Journals
               </Link>
             </div>
+          </div>
+        </div>
+
+        {/* Positivity score chart (journal NLP sentiment) */}
+        <div className="w-full">
+          <div className="relative w-full min-h-[420px] lg:aspect-[3/1] bg-white border border-gray-100 rounded-[32px] p-[24px] md:p-[40px] shadow-sm flex flex-col gap-[16px] md:gap-[24px]">
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <h2 className="font-semibold text-[20px] md:text-[24px] text-[#333] tracking-tight">
+                Journal Positivity Score
+              </h2>
+
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex items-center bg-gray-50 border border-gray-100 rounded-[12px] p-1">
+                  {PERIODS.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => setPositivityPeriod(p.id)}
+                      className={`px-[14px] py-[6px] rounded-[8px] font-medium text-[13px] transition-colors border-none cursor-pointer ${
+                        positivityPeriod === p.id
+                          ? 'bg-white text-[#333] shadow-sm'
+                          : 'bg-transparent text-[#888] hover:text-[#333]'
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex items-center gap-[12px] bg-gray-50 px-[16px] py-[8px] rounded-[12px] border border-gray-100">
+                  <span className="font-medium text-[13px] text-[#555] whitespace-nowrap">
+                    {positivityRangeLabel}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {loadingJournals ? (
+              <p className="text-[#888] text-center flex-1 flex items-center justify-center">
+                Loading…
+              </p>
+            ) : (
+              <MoodChart
+                data={positivityChart.data}
+                ticks={positivityChart.ticks}
+                accentColor="#b2f9c8"
+                gradientId="positivityGradient"
+                emptyMessage="No journal entries for this period — write a journal to start tracking positivity."
+              />
+            )}
           </div>
         </div>
       </main>
