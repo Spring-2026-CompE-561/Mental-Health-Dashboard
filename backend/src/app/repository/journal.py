@@ -3,6 +3,7 @@ from datetime import date
 from sqlalchemy.orm import Session
 
 from app.models.journal import Journal
+from app.services.sentiment import compute_positivity_score
 
 
 def get_journal_by_id(db: Session, journal_id: int) -> Journal | None:
@@ -18,6 +19,7 @@ def create_journal(db: Session, user_id: int, body: str) -> Journal:
         user_id=user_id,
         body=body,
         created_at=date.today(),
+        sentiment_score=compute_positivity_score(body),
     )
     db.add(new_journal)
     db.commit()
@@ -27,6 +29,7 @@ def create_journal(db: Session, user_id: int, body: str) -> Journal:
 
 def update_journal(db: Session, journal: Journal, body: str) -> Journal:
     journal.body = body
+    journal.sentiment_score = compute_positivity_score(body)
     db.commit()
     db.refresh(journal)
     return journal
