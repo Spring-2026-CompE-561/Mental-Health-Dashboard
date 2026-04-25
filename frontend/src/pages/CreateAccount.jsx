@@ -8,7 +8,11 @@ import { useAuth } from '../contexts/AuthContext';
 function Field({ id, label, type = 'text', value, onChange, placeholder, required = true }) {
   return (
     <div className="flex flex-col gap-2">
-      <label htmlFor={id} className="font-bold text-[13px] md:text-[14px] text-[#555] ml-1">
+      <label
+        htmlFor={id}
+        className="font-bold text-[13px] md:text-[14px] ml-1"
+        style={{ color: 'var(--secondary-color)' }}
+      >
         {label}
       </label>
       <input
@@ -18,7 +22,20 @@ function Field({ id, label, type = 'text', value, onChange, placeholder, require
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         required={required}
-        className="w-full h-[52px] md:h-[56px] border border-gray-100 rounded-2xl bg-gray-50 focus:bg-white focus:border-[#b2def9] focus:ring-4 focus:ring-[#b2def9]/10 focus:outline-none px-5 text-[14px] md:text-[15px] text-[#333] placeholder:text-[#aaa] transition-all"
+        className="w-full h-[52px] md:h-[56px] rounded-2xl focus:ring-4 focus:ring-[#b2def9]/10 focus:outline-none px-5 text-[14px] md:text-[15px] transition-all"
+        style={{
+          backgroundColor: 'var(--input-bg)',
+          border: '1px solid var(--border-light)',
+          color: 'var(--body-color)',
+        }}
+        onFocus={(e) => {
+          e.target.style.borderColor = '#b2def9';
+          e.target.style.backgroundColor = 'var(--input-focus-bg)';
+        }}
+        onBlur={(e) => {
+          e.target.style.borderColor = 'var(--border-light)';
+          e.target.style.backgroundColor = 'var(--input-bg)';
+        }}
       />
     </div>
   );
@@ -54,7 +71,6 @@ export default function CreateAccount() {
     setLoading(true);
     try {
       await createAccount({ username: username.trim(), email, password });
-      // Auto-login after successful registration so the user lands on the dashboard.
       const data = await loginApi({ email, password });
       signIn(data.access_token);
       navigate('/dashboard');
@@ -70,11 +86,21 @@ export default function CreateAccount() {
   }
 
   return (
-    <div className="flex flex-col relative w-full min-h-screen bg-[#Fafbfb]">
+    <div
+      className="flex flex-col relative w-full min-h-screen"
+      style={{ backgroundColor: 'var(--page-bg)', transition: 'background-color 0.3s' }}
+    >
       <AppHeader links={[{ label: 'Login', to: '/login' }]} />
 
       <main className="flex-1 w-full flex items-start md:items-center justify-center px-4 md:px-0 pb-10">
-        <div className="w-full max-w-[400px] md:max-w-[480px] bg-white border border-gray-100 rounded-[28px] md:rounded-[32px] p-6 md:p-12 shadow-sm flex flex-col gap-6 md:gap-[28px] relative overflow-hidden">
+        <div
+          className="w-full max-w-[400px] md:max-w-[480px] rounded-[28px] md:rounded-[32px] p-6 md:p-12 shadow-sm flex flex-col gap-6 md:gap-[28px] relative overflow-hidden"
+          style={{
+            backgroundColor: 'var(--card-bg)',
+            border: '1px solid var(--border-light)',
+            transition: 'background-color 0.3s, border-color 0.3s',
+          }}
+        >
           <div className="absolute top-0 left-0 w-full h-[6px] flex">
             <div className="flex-1 bg-[#f9b2d7]" />
             <div className="flex-1 bg-[#b2def9]" />
@@ -82,48 +108,27 @@ export default function CreateAccount() {
             <div className="flex-1 bg-[#f9f0b2]" />
           </div>
 
-          <h1 className="font-bold text-[32px] md:text-[40px] text-[#222] tracking-tight m-0 text-center pt-2">
+          <h1
+            className="font-bold text-[32px] md:text-[40px] tracking-tight m-0 text-center pt-2"
+            style={{ color: 'var(--heading-color)' }}
+          >
             Create Account
           </h1>
 
           {error && (
-            <div className="px-4 py-3 rounded-xl bg-red-50 text-red-600 text-sm text-center">
+            <div
+              className="px-4 py-3 rounded-xl text-sm text-center"
+              style={{ backgroundColor: 'var(--error-bg)', color: 'var(--error-color)' }}
+            >
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4 md:gap-5">
-            <Field
-              id="username"
-              label="Username"
-              value={username}
-              onChange={setUsername}
-              placeholder="Choose a username"
-            />
-            <Field
-              id="email"
-              label="Email"
-              type="email"
-              value={email}
-              onChange={setEmail}
-              placeholder="Enter your email"
-            />
-            <Field
-              id="password"
-              label="Password"
-              type="password"
-              value={password}
-              onChange={setPassword}
-              placeholder="••••••••"
-            />
-            <Field
-              id="confirm-password"
-              label="Confirm Password"
-              type="password"
-              value={confirmPassword}
-              onChange={setConfirmPassword}
-              placeholder="••••••••"
-            />
+            <Field id="username" label="Username" value={username} onChange={setUsername} placeholder="Choose a username" />
+            <Field id="email" label="Email" type="email" value={email} onChange={setEmail} placeholder="Enter your email" />
+            <Field id="password" label="Password" type="password" value={password} onChange={setPassword} placeholder="••••••••" />
+            <Field id="confirm-password" label="Confirm Password" type="password" value={confirmPassword} onChange={setConfirmPassword} placeholder="••••••••" />
 
             <button
               type="submit"
@@ -137,14 +142,14 @@ export default function CreateAccount() {
           </form>
 
           <div className="flex items-center gap-4 w-full">
-            <div className="flex-1 h-px bg-gray-100" />
-            <span className="font-bold text-[12px] text-[#BBB]">OR</span>
-            <div className="flex-1 h-px bg-gray-100" />
+            <div className="flex-1 h-px" style={{ backgroundColor: 'var(--border-light)' }} />
+            <span className="font-bold text-[12px]" style={{ color: 'var(--placeholder-color)' }}>OR</span>
+            <div className="flex-1 h-px" style={{ backgroundColor: 'var(--border-light)' }} />
           </div>
 
           <GoogleButton label="Sign up with Google" />
 
-          <p className="text-center font-medium text-[14px] md:text-[16px] text-[#888] m-0">
+          <p className="text-center font-medium text-[14px] md:text-[16px] m-0" style={{ color: 'var(--muted-color)' }}>
             Already have an account?{' '}
             <Link to="/login" className="font-bold text-[#b2def9] hover:underline">
               Login

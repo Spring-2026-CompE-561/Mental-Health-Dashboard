@@ -70,7 +70,7 @@ export function ProtectedRoute({ children }) {
 
   if (loading) {
     // A tiny neutral placeholder — avoids flashing the login page while /users/me resolves.
-    return <div className="min-h-screen bg-[#Fafbfb]" />;
+    return <div className="min-h-screen" style={{ backgroundColor: 'var(--page-bg)' }} />;
   }
   if (!isAuthenticated) {
     return <Navigate to="/login" replace state={{ from: location }} />;

@@ -3,7 +3,10 @@ import AppHeader from '../components/AppHeader';
 
 export default function Landing() {
   return (
-    <div className="flex flex-col relative w-full min-h-screen bg-[#Fafbfb]">
+    <div
+      className="flex flex-col relative w-full min-h-screen"
+      style={{ backgroundColor: 'var(--page-bg)', transition: 'background-color 0.3s' }}
+    >
       <AppHeader
         links={[
           { label: 'Register', to: '/create-account' },
@@ -12,20 +15,29 @@ export default function Landing() {
       />
 
       <main className="flex-1 flex flex-col items-center justify-center text-center px-[40px] pb-[80px] md:pb-[160px]">
-        <h1 className="font-semibold text-[40px] md:text-[56px] text-[#333] tracking-tight mb-[24px] max-w-[900px]">
+        <h1
+          className="font-semibold text-[40px] md:text-[56px] tracking-tight mb-[24px] max-w-[900px]"
+          style={{ color: 'var(--heading-color)' }}
+        >
           Track Your Mental Health Journey
         </h1>
-        <p className="font-normal text-[18px] md:text-[24px] text-[#555] mb-[40px]">
+        <p
+          className="font-normal text-[18px] md:text-[24px] mb-[40px]"
+          style={{ color: 'var(--secondary-color)' }}
+        >
           A guided, compassionate tool for holistic well-being.
         </p>
-        <p className="font-medium text-[20px] md:text-[28px] text-[#222] mb-[56px]">
+        <p
+          className="font-medium text-[20px] md:text-[28px] mb-[56px]"
+          style={{ color: 'var(--heading-color)' }}
+        >
           Log your mood, write journals, track your progress.
         </p>
 
         {/* Decorative dots chart */}
         <div className="mb-[64px] relative w-[300px] h-[50px] flex justify-center items-center">
           <svg width="280" height="50" viewBox="0 0 280 50" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M20 30 L80 15 L140 35 L200 20 L260 25" stroke="#E2E8F0" strokeWidth="3" />
+            <path d="M20 30 L80 15 L140 35 L200 20 L260 25" stroke="var(--border-color)" strokeWidth="3" />
             <circle cx="20" cy="30" r="10" fill="#f9b2d7" />
             <circle cx="80" cy="15" r="10" fill="#b2def9" />
             <circle cx="140" cy="35" r="10" fill="#b2f9c8" />

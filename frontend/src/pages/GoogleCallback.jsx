@@ -11,7 +11,6 @@ export default function GoogleCallback() {
   const errorParam = searchParams.get('error');
 
   useEffect(() => {
-    // StrictMode runs effects twice in dev — guard so we only signIn once.
     if (ranRef.current) return;
     ranRef.current = true;
 
@@ -23,10 +22,21 @@ export default function GoogleCallback() {
 
   if (errorParam || !token) {
     return (
-      <div className="min-h-screen bg-[#Fafbfb] flex items-center justify-center p-[40px]">
-        <div className="w-full max-w-[480px] bg-white border border-gray-100 rounded-[32px] p-[48px] shadow-sm text-center">
-          <h1 className="font-semibold text-[28px] text-[#222] mb-4">Sign-in failed</h1>
-          <p className="text-[#555] mb-6">
+      <div
+        className="min-h-screen flex items-center justify-center p-[40px]"
+        style={{ backgroundColor: 'var(--page-bg)' }}
+      >
+        <div
+          className="w-full max-w-[480px] rounded-[32px] p-[48px] shadow-sm text-center"
+          style={{
+            backgroundColor: 'var(--card-bg)',
+            border: '1px solid var(--border-light)',
+          }}
+        >
+          <h1 className="font-semibold text-[28px] mb-4" style={{ color: 'var(--heading-color)' }}>
+            Sign-in failed
+          </h1>
+          <p className="mb-6" style={{ color: 'var(--secondary-color)' }}>
             {errorParam || "We couldn't complete your Google sign-in. Please try again."}
           </p>
           <Link
@@ -41,8 +51,11 @@ export default function GoogleCallback() {
   }
 
   return (
-    <div className="min-h-screen bg-[#Fafbfb] flex items-center justify-center">
-      <p className="text-[#555] text-[18px]">Signing you in…</p>
+    <div
+      className="min-h-screen flex items-center justify-center"
+      style={{ backgroundColor: 'var(--page-bg)' }}
+    >
+      <p className="text-[18px]" style={{ color: 'var(--secondary-color)' }}>Signing you in…</p>
     </div>
   );
 }
