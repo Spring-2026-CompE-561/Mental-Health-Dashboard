@@ -16,7 +16,6 @@ const PERIODS = [
 // ──────────────────────────────────────────────────────────
 
 function toLocalDate(dateString) {
-  // Backend returns YYYY-MM-DD; parse as local to avoid timezone drift.
   const [y, m, d] = dateString.split('-').map(Number);
   return new Date(y, m - 1, d);
 }
@@ -53,17 +52,13 @@ function formatRange(start, end, period) {
 }
 
 // ──────────────────────────────────────────────────────────
-// Chart data builders — each returns { data, ticks, startDate, endDate }
-//   data:  [{ score: number | null }]         — one bucket per X position
-//   ticks: [{ index: 0, primary, secondary }] — which buckets to label on X axis
+// Chart data builders
 // ──────────────────────────────────────────────────────────
 
 function buildWeekChart(questionnaires) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const start = daysAgo(6);
-
-  // Index scores by date key (one per day — backend guarantees this now).
   const byDate = new Map();
   for (const q of questionnaires) byDate.set(q.created_at, q.score);
 
@@ -80,7 +75,6 @@ function buildWeekChart(questionnaires) {
       secondary: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
     });
   }
-
   return { data, ticks, startDate: start, endDate: today };
 }
 
@@ -88,7 +82,6 @@ function buildMonthChart(questionnaires) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const start = daysAgo(29);
-
   const byDate = new Map();
   for (const q of questionnaires) byDate.set(q.created_at, q.score);
 
@@ -99,7 +92,6 @@ function buildMonthChart(questionnaires) {
     d.setDate(start.getDate() + i);
     const key = toISODate(d);
     data.push({ score: byDate.has(key) ? byDate.get(key) : null });
-    // Label every 5th bucket plus the last (today) so we don't crowd the axis.
     if (i % 5 === 0 || i === 29) {
       ticks.push({
         index: i,
@@ -108,17 +100,14 @@ function buildMonthChart(questionnaires) {
       });
     }
   }
-
   return { data, ticks, startDate: start, endDate: today };
 }
 
 function buildYearChart(questionnaires) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  // 12 months ending with the current one.
   const firstMonth = addMonths(new Date(today.getFullYear(), today.getMonth(), 1), -11);
 
-  // Bucket scores into months, averaging.
   const sums = new Array(12).fill(0);
   const counts = new Array(12).fill(0);
   for (const q of questionnaires) {
@@ -144,10 +133,9 @@ function buildYearChart(questionnaires) {
     });
   }
 
-  // End date is end of current month (for display purposes).
   const endDate = addMonths(firstMonth, 11);
   endDate.setMonth(endDate.getMonth() + 1);
-  endDate.setDate(0); // last day of that month
+  endDate.setDate(0);
   return { data, ticks, startDate: firstMonth, endDate };
 }
 
@@ -159,38 +147,25 @@ function buildChartForPeriod(period, questionnaires) {
 
 // ──────────────────────────────────────────────────────────
 // Chart component
-// Line drawn in SVG (scales fine). Circles rendered as HTML divs so they stay perfectly round
-// regardless of container aspect ratio.
 // ──────────────────────────────────────────────────────────
 
 function MoodChart({ data, ticks }) {
   const n = data.length;
-
-  // X positions as percentages, inset slightly from the edges so circles don't get clipped.
-  const leftPad = 3; // percent
+  const leftPad = 3;
   const rightPad = 3;
   const xAt = (i) => {
     if (n === 1) return 50;
     return leftPad + (i / (n - 1)) * (100 - leftPad - rightPad);
   };
-  const yAt = (score) => 100 - (score / 10) * 100; // 0 at bottom, 10 at top
+  const yAt = (score) => 100 - (score / 10) * 100;
 
   const points = data.map((d, i) =>
     d.score === null || d.score === undefined
       ? null
-      : {
-          i,
-          x: xAt(i),
-          y: yAt(d.score),
-          color: STRIPE_COLORS[i % STRIPE_COLORS.length],
-        }
+      : { i, x: xAt(i), y: yAt(d.score), color: STRIPE_COLORS[i % STRIPE_COLORS.length] }
   );
 
-  // Connect all data points in a single continuous line. Days without entries are simply
-  // skipped — the line jumps from the last known point to the next one. This matches how
-  // health-tracking apps handle sparse data and avoids isolated floating dots.
   const presentPoints = points.filter(Boolean);
-
   const linePath = presentPoints
     .map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`)
     .join(' ');
@@ -212,8 +187,13 @@ function MoodChart({ data, ticks }) {
       <div className="absolute inset-0 flex flex-col justify-between pt-2 pb-14 pl-2 pr-10">
         {[10, 8, 6, 4, 2, 0].map((val) => (
           <div key={val} className="w-full flex items-center gap-4">
-            <div className="flex-1 h-px bg-gray-100" />
-            <span className="w-6 text-right text-[12px] font-bold text-gray-300">{val}</span>
+            <div className="flex-1 h-px" style={{ backgroundColor: 'var(--grid-line)' }} />
+            <span
+              className="w-6 text-right text-[12px] font-bold"
+              style={{ color: 'var(--chart-label)' }}
+            >
+              {val}
+            </span>
           </div>
         ))}
       </div>
@@ -245,16 +225,18 @@ function MoodChart({ data, ticks }) {
                 style={{ strokeWidth: 3 }}
               />
             </svg>
-            {/* Circles as HTML divs — stay perfectly round, never clipped */}
             {points.map((p) =>
               p ? (
                 <div
                   key={p.i}
-                  className="absolute w-3 h-3 rounded-full bg-white border-[3px] shadow-sm"
+                  className="absolute w-3 h-3 rounded-full shadow-sm"
                   style={{
                     left: `${p.x}%`,
                     top: `${p.y}%`,
                     borderColor: p.color,
+                    borderWidth: '3px',
+                    borderStyle: 'solid',
+                    backgroundColor: 'var(--card-bg)',
                     transform: 'translate(-50%, -50%)',
                   }}
                   title={`Score: ${data[p.i].score.toFixed(1)}`}
@@ -264,7 +246,7 @@ function MoodChart({ data, ticks }) {
           </div>
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <p className="text-[#aaa] text-center">
+            <p style={{ color: 'var(--placeholder-color)' }} className="text-center">
               No mood data for this period — log your mood to start the chart.
             </p>
           </div>
@@ -282,10 +264,16 @@ function MoodChart({ data, ticks }) {
               transform: 'translateX(-50%)',
             }}
           >
-            <span className="text-[11px] font-black text-gray-300 uppercase tracking-widest whitespace-nowrap">
+            <span
+              className="text-[11px] font-black uppercase tracking-widest whitespace-nowrap"
+              style={{ color: 'var(--chart-label)' }}
+            >
               {tick.primary}
             </span>
-            <span className="text-[12px] font-medium text-gray-500 whitespace-nowrap">
+            <span
+              className="text-[12px] font-medium whitespace-nowrap"
+              style={{ color: 'var(--muted-color)' }}
+            >
               {tick.secondary}
             </span>
           </div>
@@ -326,7 +314,6 @@ export default function Dashboard() {
   const [loadingJournals, setLoadingJournals] = useState(true);
   const [error, setError] = useState('');
 
-  // Fetch questionnaires scoped to the selected period. Refetches whenever the period changes.
   useEffect(() => {
     let cancelled = false;
     setLoadingChart(true);
@@ -352,12 +339,9 @@ export default function Dashboard() {
         if (!cancelled) setLoadingChart(false);
       });
 
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [period]);
 
-  // Journals are fetched once — they're period-independent.
   useEffect(() => {
     let cancelled = false;
     getJournals()
@@ -372,9 +356,7 @@ export default function Dashboard() {
       .finally(() => {
         if (!cancelled) setLoadingJournals(false);
       });
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
   const chart = useMemo(() => buildChartForPeriod(period, questionnaires), [period, questionnaires]);
@@ -386,17 +368,30 @@ export default function Dashboard() {
   const displayName = user?.username || 'there';
 
   return (
-    <div className="flex flex-col relative w-full min-h-screen bg-[#Fafbfb]">
+    <div
+      className="flex flex-col relative w-full min-h-screen"
+      style={{ backgroundColor: 'var(--page-bg)', transition: 'background-color 0.3s' }}
+    >
       <AppHeader logout />
 
       <main className="flex-1 w-full p-[24px] md:p-[64px] flex flex-col gap-[32px] md:gap-[48px]">
         <div className="flex w-full items-center justify-between gap-6 flex-wrap">
-          <h1 className="font-semibold text-[32px] md:text-[44px] text-[#222] tracking-tight m-0">
+          <h1
+            className="font-semibold text-[32px] md:text-[44px] tracking-tight m-0"
+            style={{ color: 'var(--heading-color)' }}
+          >
             Welcome back, <span className="text-[#b2def9]">{displayName}</span>!
           </h1>
 
-          <div className="flex items-center gap-[16px] md:gap-[24px] bg-white border border-gray-100 rounded-[24px] px-[24px] md:px-[32px] py-[16px] md:py-[20px] shadow-sm">
-            <p className="font-normal text-[16px] md:text-[18px] text-[#555] m-0">
+          <div
+            className="flex items-center gap-[16px] md:gap-[24px] rounded-[24px] px-[24px] md:px-[32px] py-[16px] md:py-[20px] shadow-sm"
+            style={{
+              backgroundColor: 'var(--card-bg)',
+              border: '1px solid var(--border-light)',
+              transition: 'background-color 0.3s, border-color 0.3s',
+            }}
+          >
+            <p className="font-normal text-[16px] md:text-[18px] m-0" style={{ color: 'var(--secondary-color)' }}>
               How are you feeling today?
             </p>
             <button
@@ -412,39 +407,69 @@ export default function Dashboard() {
         </div>
 
         {error && (
-          <div className="px-4 py-3 rounded-xl bg-red-50 text-red-600 text-sm">{error}</div>
+          <div
+            className="px-4 py-3 rounded-xl text-sm"
+            style={{ backgroundColor: 'var(--error-bg)', color: 'var(--error-color)' }}
+          >
+            {error}
+          </div>
         )}
 
         <div className="flex flex-col lg:flex-row items-stretch gap-[32px] md:gap-[40px] w-full flex-1">
           {/* Mood chart */}
           <div className="flex-[2.5] flex flex-col">
-            <div className="relative w-full min-h-[420px] lg:aspect-[2/1] bg-white border border-gray-100 rounded-[32px] p-[24px] md:p-[40px] shadow-sm flex flex-col gap-[16px] md:gap-[24px]">
+            <div
+              className="relative w-full min-h-[420px] lg:aspect-[2/1] rounded-[32px] p-[24px] md:p-[40px] shadow-sm flex flex-col gap-[16px] md:gap-[24px]"
+              style={{
+                backgroundColor: 'var(--card-bg)',
+                border: '1px solid var(--border-light)',
+                transition: 'background-color 0.3s, border-color 0.3s',
+              }}
+            >
               <div className="flex items-center justify-between gap-4 flex-wrap">
-                <h2 className="font-semibold text-[20px] md:text-[24px] text-[#333] tracking-tight">
+                <h2
+                  className="font-semibold text-[20px] md:text-[24px] tracking-tight"
+                  style={{ color: 'var(--body-color)' }}
+                >
                   Mood Analytics
                 </h2>
 
                 <div className="flex items-center gap-3 flex-wrap">
-                  {/* Period selector */}
-                  <div className="flex items-center bg-gray-50 border border-gray-100 rounded-[12px] p-1">
+                  <div
+                    className="flex items-center rounded-[12px] p-1"
+                    style={{
+                      backgroundColor: 'var(--input-bg)',
+                      border: '1px solid var(--border-light)',
+                    }}
+                  >
                     {PERIODS.map((p) => (
                       <button
                         key={p.id}
                         type="button"
                         onClick={() => setPeriod(p.id)}
-                        className={`px-[14px] py-[6px] rounded-[8px] font-medium text-[13px] transition-colors border-none cursor-pointer ${
-                          period === p.id
-                            ? 'bg-white text-[#333] shadow-sm'
-                            : 'bg-transparent text-[#888] hover:text-[#333]'
-                        }`}
+                        className="px-[14px] py-[6px] rounded-[8px] font-medium text-[13px] transition-colors border-none cursor-pointer"
+                        style={{
+                          backgroundColor: period === p.id ? 'var(--card-bg)' : 'transparent',
+                          color: period === p.id ? 'var(--body-color)' : 'var(--muted-color)',
+                          boxShadow: period === p.id ? 'var(--shadow-sm)' : 'none',
+                        }}
                       >
                         {p.label}
                       </button>
                     ))}
                   </div>
 
-                  <div className="flex items-center gap-[12px] bg-gray-50 px-[16px] py-[8px] rounded-[12px] border border-gray-100">
-                    <span className="font-medium text-[13px] text-[#555] whitespace-nowrap">
+                  <div
+                    className="flex items-center gap-[12px] px-[16px] py-[8px] rounded-[12px]"
+                    style={{
+                      backgroundColor: 'var(--input-bg)',
+                      border: '1px solid var(--border-light)',
+                    }}
+                  >
+                    <span
+                      className="font-medium text-[13px] whitespace-nowrap"
+                      style={{ color: 'var(--secondary-color)' }}
+                    >
                       {rangeLabel}
                     </span>
                   </div>
@@ -452,7 +477,7 @@ export default function Dashboard() {
               </div>
 
               {loadingChart ? (
-                <p className="text-[#888] text-center flex-1 flex items-center justify-center">
+                <p className="flex-1 flex items-center justify-center" style={{ color: 'var(--muted-color)' }}>
                   Loading…
                 </p>
               ) : (
@@ -462,16 +487,26 @@ export default function Dashboard() {
           </div>
 
           {/* Recent journal entries */}
-          <div className="flex-1 flex flex-col bg-white border border-gray-100 rounded-[32px] p-[28px] md:p-[40px] shadow-sm">
-            <h2 className="font-semibold text-[20px] md:text-[22px] text-[#333] tracking-tight mb-[24px] md:mb-[32px]">
+          <div
+            className="flex-1 flex flex-col rounded-[32px] p-[28px] md:p-[40px] shadow-sm"
+            style={{
+              backgroundColor: 'var(--card-bg)',
+              border: '1px solid var(--border-light)',
+              transition: 'background-color 0.3s, border-color 0.3s',
+            }}
+          >
+            <h2
+              className="font-semibold text-[20px] md:text-[22px] tracking-tight mb-[24px] md:mb-[32px]"
+              style={{ color: 'var(--body-color)' }}
+            >
               Recent Entries
             </h2>
 
             <div className="flex-1 flex flex-col gap-[16px]">
               {loadingJournals ? (
-                <p className="text-[#888]">Loading…</p>
+                <p style={{ color: 'var(--muted-color)' }}>Loading…</p>
               ) : recentJournals.length === 0 ? (
-                <p className="text-[#888] text-[14px]">
+                <p className="text-[14px]" style={{ color: 'var(--muted-color)' }}>
                   No entries yet. Start writing to see them here.
                 </p>
               ) : (
@@ -479,18 +514,34 @@ export default function Dashboard() {
                   <Link
                     key={entry.id}
                     to="/journals"
-                    className="w-full flex flex-col gap-[6px] p-[20px] rounded-[20px] bg-gray-50 border border-gray-100 hover:border-gray-200 transition-colors cursor-pointer no-underline"
+                    className="w-full flex flex-col gap-[6px] p-[20px] rounded-[20px] transition-colors cursor-pointer no-underline"
+                    style={{
+                      backgroundColor: 'var(--input-bg)',
+                      border: '1px solid var(--border-light)',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = 'var(--border-color)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = 'var(--border-light)';
+                    }}
                   >
                     <div className="flex items-center gap-[10px] w-full overflow-hidden">
                       <div
                         className="w-2.5 h-2.5 rounded-full shrink-0"
                         style={{ backgroundColor: STRIPE_COLORS[i % STRIPE_COLORS.length] }}
                       />
-                      <p className="font-medium text-[15px] text-[#555] truncate w-full m-0">
+                      <p
+                        className="font-medium text-[15px] truncate w-full m-0"
+                        style={{ color: 'var(--secondary-color)' }}
+                      >
                         {previewOf(entry.body)}
                       </p>
                     </div>
-                    <p className="font-bold text-[11px] text-gray-300 uppercase tracking-tight ml-[20px] m-0">
+                    <p
+                      className="font-bold text-[11px] uppercase tracking-tight ml-[20px] m-0"
+                      style={{ color: 'var(--chart-label)' }}
+                    >
                       {formatJournalDate(entry.created_at)}
                     </p>
                   </Link>
@@ -501,7 +552,10 @@ export default function Dashboard() {
             <div className="flex items-center gap-[32px] mt-[24px] md:mt-[32px] pt-[16px]">
               <Link
                 to="/journals"
-                className="font-bold text-[14px] text-[#888] hover:text-[#111] transition-colors uppercase tracking-widest border-b-2 border-[#b2f9c8] pb-1 no-underline"
+                className="font-bold text-[14px] uppercase tracking-widest border-b-2 border-[#b2f9c8] pb-1 no-underline transition-colors"
+                style={{ color: 'var(--muted-color)' }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--heading-color)')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--muted-color)')}
               >
                 View All Journals
               </Link>

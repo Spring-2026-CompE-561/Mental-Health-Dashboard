@@ -10,6 +10,78 @@
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
 }
 
+/* ───────────────────────────────────────────────
+   Light / Dark theme tokens
+   ─────────────────────────────────────────────── */
+
+:root {
+  --page-bg: #fafbfb;
+  --card-bg: #ffffff;
+  --input-bg: #f9fafb;
+  --input-focus-bg: #ffffff;
+  --hover-bg: #f9fafb;
+
+  --heading-color: #222222;
+  --body-color: #333333;
+  --secondary-color: #555555;
+  --muted-color: #888888;
+  --placeholder-color: #aaaaaa;
+  --faint-color: #999999;
+
+  --border-color: #e5e7eb;
+  --border-light: #f3f4f6;
+  --border-card: #f3f4f6;
+
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.08);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+
+  --overlay-bg: rgba(0, 0, 0, 0.4);
+
+  --error-bg: #fef2f2;
+  --error-color: #dc2626;
+  --success-bg: #f0fdf4;
+  --success-color: #15803d;
+
+  --grid-line: #f3f4f6;
+  --chart-label: #cbd5e1;
+}
+
+.dark {
+  --page-bg: #0f172a;
+  --card-bg: #1e293b;
+  --input-bg: #334155;
+  --input-focus-bg: #1e293b;
+  --hover-bg: #334155;
+
+  --heading-color: #f1f5f9;
+  --body-color: #e2e8f0;
+  --secondary-color: #cbd5e1;
+  --muted-color: #94a3b8;
+  --placeholder-color: #64748b;
+  --faint-color: #64748b;
+
+  --border-color: #475569;
+  --border-light: #334155;
+  --border-card: #334155;
+
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
+
+  --overlay-bg: rgba(0, 0, 0, 0.6);
+
+  --error-bg: #450a0a;
+  --error-color: #fca5a5;
+  --success-bg: #052e16;
+  --success-color: #86efac;
+
+  --grid-line: #334155;
+  --chart-label: #64748b;
+}
+
+/* ───────────────────────────────────────────────
+   Base resets
+   ─────────────────────────────────────────────── */
+
 * {
   box-sizing: border-box;
 }
@@ -24,10 +96,11 @@ body,
 
 body {
   font-family: "Inter", system-ui, -apple-system, sans-serif;
-  background-color: #fafbfb;
-  color: #333333;
+  background-color: var(--page-bg);
+  color: var(--body-color);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 a {

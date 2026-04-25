@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider, ProtectedRoute, useAuth } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 
 import Landing from './pages/Landing';
 import Login from './pages/Login';
@@ -17,7 +18,7 @@ import Questionnaire from './pages/Questionnaire';
  */
 function PublicOnlyRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
-  if (loading) return <div className="min-h-screen bg-[#Fafbfb]" />;
+  if (loading) return <div className="min-h-screen" style={{ backgroundColor: 'var(--page-bg)' }} />;
   if (isAuthenticated) return <Navigate to="/dashboard" replace />;
   return children;
 }
@@ -86,9 +87,11 @@ function AppRoutes() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }
