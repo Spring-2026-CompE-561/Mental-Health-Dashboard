@@ -225,10 +225,3 @@ __marimo__/
 
 # macOS
 .DS_Store
-.claude/
-frontend/.next_old/
-AGENTS.md
-CLAUDE.md
-frontend/AGENTS.md
-frontend/CLAUDE.md
-TESTING_GUIDE.md
