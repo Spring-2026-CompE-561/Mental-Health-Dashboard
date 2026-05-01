@@ -1,6 +1,7 @@
 """Pydantic schemas for questionnaire requests and responses."""
 
 from datetime import date
+from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
@@ -50,6 +51,6 @@ class QuestionnaireResponse(QuestionnaireBase):
 
 
 class QuestionnaireAverageResponse(BaseModel):
-    average_score: float | None = None
-    from_date: date | None = None
-    to_date: date | None = None
+    average_score: Optional[float] = None
+    from_date: Optional[date] = None
+    to_date: Optional[date] = None

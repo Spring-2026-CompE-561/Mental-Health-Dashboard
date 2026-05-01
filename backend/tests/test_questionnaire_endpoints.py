@@ -20,7 +20,7 @@ def _register_second_user(client):
 def _create_questionnaire(client, auth_headers, score=75.0):
     """Helper to create a questionnaire and return the response json."""
     resp = client.post(
-        "/api/questionnaires/",
+        "/api/questionnaires",
         json={"score": score},
         headers=auth_headers,
     )
@@ -46,7 +46,7 @@ class TestCreateQuestionnaire:
 
     def test_create_score_too_high(self, client, registered_user, auth_headers):
         resp = client.post(
-            "/api/questionnaires/",
+            "/api/questionnaires",
             json={"score": 101.0},
             headers=auth_headers,
         )
@@ -54,7 +54,7 @@ class TestCreateQuestionnaire:
 
     def test_create_score_negative(self, client, registered_user, auth_headers):
         resp = client.post(
-            "/api/questionnaires/",
+            "/api/questionnaires",
             json={"score": -1.0},
             headers=auth_headers,
         )
@@ -62,14 +62,14 @@ class TestCreateQuestionnaire:
 
     def test_create_missing_score(self, client, registered_user, auth_headers):
         resp = client.post(
-            "/api/questionnaires/",
+            "/api/questionnaires",
             json={},
             headers=auth_headers,
         )
         assert resp.status_code == 422
 
     def test_create_unauthenticated(self, client):
-        resp = client.post("/api/questionnaires/", json={"score": 50.0})
+        resp = client.post("/api/questionnaires", json={"score": 50.0})
         assert resp.status_code == 401
 
 
@@ -77,13 +77,15 @@ class TestGetAllQuestionnaires:
     def test_get_all(self, client, registered_user, auth_headers):
         _create_questionnaire(client, auth_headers, score=60.0)
         _create_questionnaire(client, auth_headers, score=80.0)
-        resp = client.get("/api/questionnaires/", headers=auth_headers)
+        resp = client.get("/api/questionnaires", headers=auth_headers)
         assert resp.status_code == 200
         data = resp.json()
-        assert len(data) == 2
+        # Same-day posts trigger upsert, so the second score replaces the first
+        assert len(data) == 1
+        assert data[0]["score"] == 80.0
 
     def test_get_all_empty(self, client, registered_user, auth_headers):
-        resp = client.get("/api/questionnaires/", headers=auth_headers)
+        resp = client.get("/api/questionnaires", headers=auth_headers)
         assert resp.status_code == 200
         assert resp.json() == []
 
@@ -91,11 +93,11 @@ class TestGetAllQuestionnaires:
         _create_questionnaire(client, auth_headers, score=60.0)
         _, other_headers = _register_second_user(client)
         _create_questionnaire(client, other_headers, score=90.0)
-        resp = client.get("/api/questionnaires/", headers=auth_headers)
+        resp = client.get("/api/questionnaires", headers=auth_headers)
         assert len(resp.json()) == 1
 
     def test_get_all_unauthenticated(self, client):
-        resp = client.get("/api/questionnaires/")
+        resp = client.get("/api/questionnaires")
         assert resp.status_code == 401
 
 
@@ -129,7 +131,8 @@ class TestAverageScore:
         resp = client.get("/api/questionnaires/average", headers=auth_headers)
         assert resp.status_code == 200
         data = resp.json()
-        assert data["average_score"] == 70.0
+        # Same-day upsert means only the latest score (80) is stored
+        assert data["average_score"] == 80.0
 
     def test_average_no_entries(self, client, registered_user, auth_headers):
         resp = client.get("/api/questionnaires/average", headers=auth_headers)

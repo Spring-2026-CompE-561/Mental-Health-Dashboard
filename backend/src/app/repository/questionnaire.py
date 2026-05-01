@@ -1,5 +1,7 @@
 """CRUD operations for the Questionnaire model."""
 
+from __future__ import annotations
+
 from datetime import date
 
 from sqlalchemy import func
@@ -8,25 +10,11 @@ from sqlalchemy.orm import Session
 from app.models.questionnaire import Questionnaire
 
 
-def _calculate_score(mood: float, depression: float, anxiety: float) -> float:
-    """Average the 3 question scores and scale to 0–100."""
-    return round((mood + depression + anxiety) / 3 * 10, 2)
-
-
-def create_questionnaire(
-    db: Session,
-    user_id: int,
-    mood: float,
-    depression: float,
-    anxiety: float,
-) -> Questionnaire:
+def create_questionnaire(db: Session, user_id: int, score: float) -> Questionnaire:
     """Insert a new questionnaire record and return it."""
     entry = Questionnaire(
         user_id=user_id,
-        mood=mood,
-        depression=depression,
-        anxiety=anxiety,
-        score=_calculate_score(mood, depression, anxiety),
+        score=score,
         created_at=date.today(),
     )
     db.add(entry)
@@ -35,10 +23,12 @@ def create_questionnaire(
     return entry
 
 
-def get_questionnaire_by_user_and_date(db: Session, user_id: int, for_date: date) -> Questionnaire | None:
-    """Return the questionnaire for a specific user and date, or None."""
+def get_questionnaire_for_date(db: Session, user_id: int, target_date: date) -> Questionnaire | None:
+    """Return the questionnaire for a specific user and date, or None if none exists."""
     return (
-        db.query(Questionnaire).filter(Questionnaire.user_id == user_id, Questionnaire.created_at == for_date).first()
+        db.query(Questionnaire)
+        .filter(Questionnaire.user_id == user_id, Questionnaire.created_at == target_date)
+        .first()
     )
 
 
@@ -70,18 +60,9 @@ def get_average_score(
     return round(result, 2) if result is not None else None
 
 
-def update_questionnaire(
-    db: Session,
-    questionnaire: Questionnaire,
-    mood: float,
-    depression: float,
-    anxiety: float,
-) -> Questionnaire:
-    """Update question scores and recalculate total score."""
-    questionnaire.mood = mood
-    questionnaire.depression = depression
-    questionnaire.anxiety = anxiety
-    questionnaire.score = _calculate_score(mood, depression, anxiety)
+def update_questionnaire(db: Session, questionnaire: Questionnaire, score: float) -> Questionnaire:
+    """Update the score of an existing questionnaire and return the updated record."""
+    questionnaire.score = score
     db.commit()
     db.refresh(questionnaire)
     return questionnaire

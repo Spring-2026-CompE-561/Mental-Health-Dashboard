@@ -167,11 +167,15 @@ class TestGoogleOAuthEndpoints:
             status_code=200,
             json=lambda: FAKE_GOOGLE_USER,
         )
-        resp = client.get("/api/auth/google/callback?code=test-auth-code")
-        assert resp.status_code == 200
-        data = resp.json()
-        assert "access_token" in data
-        assert data["token_type"] == "bearer"
+        # The callback issues a 302 redirect to the frontend with the JWT in the URL
+        resp = client.get(
+            "/api/auth/google/callback?code=test-auth-code",
+            follow_redirects=False,
+        )
+        assert resp.status_code == 302
+        location = resp.headers["location"]
+        assert "token=" in location
+        assert "/auth/google/callback" in location
 
     def test_callback_missing_code(self, client):
         resp = client.get("/api/auth/google/callback")

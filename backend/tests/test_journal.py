@@ -55,7 +55,7 @@ class TestJournalEndpoints:
             json={"body": "Today was a good day"},
             headers=auth_headers,
         )
-        assert response.status_code == 200
+        assert response.status_code == 201
         assert response.json()["body"] == "Today was a good day"
 
     def test_create_journal_unauthorized(self, client):
@@ -71,7 +71,7 @@ class TestJournalEndpoints:
             json={"body": "Entry 1"},
             headers=auth_headers,
         )
-        response = client.get("/api/journals/", headers=auth_headers)
+        response = client.get("/api/journals", headers=auth_headers)
         assert response.status_code == 200
         assert len(response.json()) >= 1
 
