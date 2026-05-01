@@ -18,16 +18,29 @@ from app.repository.questionnaire import (
 )
 from app.repository.questionnaire import (
     get_questionnaire_by_id,
+    get_questionnaire_by_user_and_date,
     get_questionnaires_by_user,
 )
 from app.repository.questionnaire import (
     update_questionnaire as repo_update,
 )
+from app.schemas.questionnaire import QuestionnaireCreate, QuestionnaireUpdate
 
 
-def create(db: Session, user: User, score: float) -> Questionnaire:
+def create(db: Session, user: User, data: QuestionnaireCreate) -> Questionnaire:
     """Create a new questionnaire entry for the given user."""
-    return repo_create(db, user_id=user.id, score=score)
+    return repo_create(
+        db,
+        user_id=user.id,
+        mood=data.mood,
+        depression=data.depression,
+        anxiety=data.anxiety,
+    )
+
+
+def get_today(db: Session, user: User) -> Questionnaire | None:
+    """Return today's questionnaire entry for the user, or None."""
+    return get_questionnaire_by_user_and_date(db, user_id=user.id, for_date=date.today())
 
 
 def get_all(db: Session, user: User) -> list[Questionnaire]:
@@ -66,10 +79,16 @@ def average(
     }
 
 
-def update(db: Session, user: User, questionnaire_id: int, score: float) -> Questionnaire:
-    """Update the score of an existing questionnaire, enforcing ownership."""
+def update(db: Session, user: User, questionnaire_id: int, data: QuestionnaireUpdate) -> Questionnaire:
+    """Update the scores of an existing questionnaire, enforcing ownership."""
     entry = get_one(db, user, questionnaire_id)  # handles 404 + 403
-    return repo_update(db, entry, score)
+    return repo_update(
+        db,
+        entry,
+        mood=data.mood,
+        depression=data.depression,
+        anxiety=data.anxiety,
+    )
 
 
 def remove(db: Session, user: User, questionnaire_id: int) -> None:
