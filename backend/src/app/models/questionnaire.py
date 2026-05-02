@@ -13,12 +13,9 @@ class Questionnaire(Base):
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    # Individual scores for each section of the questionnaire
     mood = Column(Float, nullable=False)
     anxiety = Column(Float, nullable=False)
     depression = Column(Float, nullable=False)
-
-    # Auto-calulated total score
     score = Column(Float)
     created_at = Column(Date, default=date.today)
 

@@ -21,6 +21,7 @@ from app.services.questionnaire_service import (
     create,
     get_all,
     get_one,
+    get_today,
     remove,
     update,
 )
@@ -35,7 +36,7 @@ async def save_questionnaire(
     current_user: User = Depends(get_current_user),
 ):
     """Save daily questionnaire score."""
-    return create(db, current_user, data.score)
+    return create(db, current_user, data)
 
 
 @router.get("/average", response_model=QuestionnaireAverageResponse)
@@ -49,17 +50,13 @@ async def get_average_score(
     return average(db, current_user, from_date=from_date, to_date=to_date)
 
 
-@router.get("/today")
+@router.get("/today", response_model=QuestionnaireResponse | None)
 async def get_today_questionnaire(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Get the current user's questionnaire entry for today, or null if none exists."""
-    from app.repository.questionnaire import get_questionnaire_for_date
-
-    today = date.today()
-    entry = get_questionnaire_for_date(db, current_user.id, today)
-    return entry
+    """Get today's questionnaire entry for the logged-in user, or null if none."""
+    return get_today(db, current_user)
 
 
 @router.get("", response_model=list[QuestionnaireResponse])
@@ -89,7 +86,7 @@ async def update_questionnaire(
     current_user: User = Depends(get_current_user),
 ):
     """Update an existing questionnaire score."""
-    return update(db, current_user, questionnaire_id, data.score)
+    return update(db, current_user, questionnaire_id, data)
 
 
 @router.delete("/{questionnaire_id}", response_model=SuccessResponse)

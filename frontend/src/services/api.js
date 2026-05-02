@@ -105,8 +105,8 @@ export async function deleteJournal(id) {
 // Questionnaires
 // ──────────────────────────────────────────────────────────
 
-export async function createQuestionnaire({ score }) {
-  const { data } = await api.post("/questionnaires", { score });
+export async function createQuestionnaire({ mood, depression, anxiety }) {
+  const { data } = await api.post("/questionnaires", { mood, depression, anxiety });
   return data;
 }
 

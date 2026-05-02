@@ -1,5 +1,7 @@
 """Pydantic schemas for questionnaire requests and responses."""
 
+from __future__ import annotations
+
 from datetime import date
 from typing import Optional
 
@@ -46,7 +48,7 @@ class QuestionnaireResponse(QuestionnaireBase):
 
     id: int
     user_id: int
-    score: float | None = None
+    score: Optional[float] = None
     created_at: date
 
 

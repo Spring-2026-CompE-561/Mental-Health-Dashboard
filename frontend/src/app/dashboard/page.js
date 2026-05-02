@@ -14,6 +14,12 @@ const PERIODS = [
   { id: "year", label: "Year" },
 ];
 
+const METRIC_CHARTS = [
+  { field: "mood",       label: "Mood",       color: "#b2f9c8", gradientId: "moodGrad",       emptyMsg: "No mood data yet." },
+  { field: "depression", label: "Depression",  color: "#f9b2d7", gradientId: "depressionGrad", emptyMsg: "No depression data yet." },
+  { field: "anxiety",    label: "Anxiety",     color: "#f9f0b2", gradientId: "anxietyGrad",    emptyMsg: "No anxiety data yet." },
+];
+
 // ──────────────────────────────────────────────────────────
 // Date helpers
 // ──────────────────────────────────────────────────────────
@@ -58,12 +64,12 @@ function formatRange(start, end, period) {
 // Chart data builders
 // ──────────────────────────────────────────────────────────
 
-function buildWeekChart(questionnaires) {
+function buildWeekChart(questionnaires, field) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const start = daysAgo(6);
   const byDate = new Map();
-  for (const q of questionnaires) byDate.set(q.created_at, q.score);
+  for (const q of questionnaires) byDate.set(q.created_at, q[field]);
 
   const data = [];
   const ticks = [];
@@ -81,12 +87,12 @@ function buildWeekChart(questionnaires) {
   return { data, ticks, startDate: start, endDate: today };
 }
 
-function buildMonthChart(questionnaires) {
+function buildMonthChart(questionnaires, field) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const start = daysAgo(29);
   const byDate = new Map();
-  for (const q of questionnaires) byDate.set(q.created_at, q.score);
+  for (const q of questionnaires) byDate.set(q.created_at, q[field]);
 
   const data = [];
   const ticks = [];
@@ -106,7 +112,7 @@ function buildMonthChart(questionnaires) {
   return { data, ticks, startDate: start, endDate: today };
 }
 
-function buildYearChart(questionnaires) {
+function buildYearChart(questionnaires, field) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const firstMonth = addMonths(new Date(today.getFullYear(), today.getMonth(), 1), -11);
@@ -119,7 +125,7 @@ function buildYearChart(questionnaires) {
       (qDate.getFullYear() - firstMonth.getFullYear()) * 12 +
       (qDate.getMonth() - firstMonth.getMonth());
     if (monthDiff >= 0 && monthDiff < 12) {
-      sums[monthDiff] += q.score;
+      sums[monthDiff] += q[field];
       counts[monthDiff] += 1;
     }
   }
@@ -142,17 +148,111 @@ function buildYearChart(questionnaires) {
   return { data, ticks, startDate: firstMonth, endDate };
 }
 
-function buildChartForPeriod(period, questionnaires) {
-  if (period === "month") return buildMonthChart(questionnaires);
-  if (period === "year") return buildYearChart(questionnaires);
-  return buildWeekChart(questionnaires);
+function buildChartForPeriod(period, questionnaires, field) {
+  if (period === "month") return buildMonthChart(questionnaires, field);
+  if (period === "year") return buildYearChart(questionnaires, field);
+  return buildWeekChart(questionnaires, field);
 }
 
 // ──────────────────────────────────────────────────────────
-// Chart component
+// Positivity chart (journal sentiment)
 // ──────────────────────────────────────────────────────────
 
-function MoodChart({ data, ticks }) {
+function buildPositivityWeek(journals) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const start = daysAgo(6);
+  const byDate = new Map();
+  for (const j of journals) {
+    if (j.sentiment_score != null) byDate.set(j.created_at, j.sentiment_score);
+  }
+  const data = [];
+  const ticks = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    const key = toISODate(d);
+    data.push({ score: byDate.has(key) ? byDate.get(key) * 10 : null });
+    ticks.push({
+      index: i,
+      primary: d.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase(),
+      secondary: d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+    });
+  }
+  return { data, ticks, startDate: start, endDate: today };
+}
+
+function buildPositivityMonth(journals) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const start = daysAgo(29);
+  const byDate = new Map();
+  for (const j of journals) {
+    if (j.sentiment_score != null) byDate.set(j.created_at, j.sentiment_score);
+  }
+  const data = [];
+  const ticks = [];
+  for (let i = 0; i < 30; i++) {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    const key = toISODate(d);
+    data.push({ score: byDate.has(key) ? byDate.get(key) * 10 : null });
+    if (i % 5 === 0 || i === 29) {
+      ticks.push({
+        index: i,
+        primary: d.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase(),
+        secondary: d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      });
+    }
+  }
+  return { data, ticks, startDate: start, endDate: today };
+}
+
+function buildPositivityYear(journals) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const firstMonth = addMonths(new Date(today.getFullYear(), today.getMonth(), 1), -11);
+  const sums = new Array(12).fill(0);
+  const counts = new Array(12).fill(0);
+  for (const j of journals) {
+    if (j.sentiment_score == null) continue;
+    const jDate = toLocalDate(j.created_at);
+    const diff =
+      (jDate.getFullYear() - firstMonth.getFullYear()) * 12 +
+      (jDate.getMonth() - firstMonth.getMonth());
+    if (diff >= 0 && diff < 12) {
+      sums[diff] += j.sentiment_score * 10;
+      counts[diff] += 1;
+    }
+  }
+  const data = [];
+  const ticks = [];
+  for (let i = 0; i < 12; i++) {
+    const ms = addMonths(firstMonth, i);
+    data.push({ score: counts[i] > 0 ? sums[i] / counts[i] : null });
+    ticks.push({
+      index: i,
+      primary: ms.toLocaleDateString("en-US", { month: "short" }).toUpperCase(),
+      secondary: `'${String(ms.getFullYear()).slice(-2)}`,
+    });
+  }
+  const endDate = addMonths(firstMonth, 11);
+  endDate.setMonth(endDate.getMonth() + 1);
+  endDate.setDate(0);
+  return { data, ticks, startDate: firstMonth, endDate };
+}
+
+function buildPositivityChart(period, journals) {
+  if (period === "month") return buildPositivityMonth(journals);
+  if (period === "year") return buildPositivityYear(journals);
+  return buildPositivityWeek(journals);
+}
+
+// ──────────────────────────────────────────────────────────
+// Line chart component
+// ──────────────────────────────────────────────────────────
+
+function MoodChart({ data, ticks, accentColor = "#b2def9", gradientId = "moodGradient", emptyMessage }) {
   const n = data.length;
   const leftPad = 3;
   const rightPad = 3;
@@ -165,7 +265,7 @@ function MoodChart({ data, ticks }) {
   const points = data.map((d, i) =>
     d.score === null || d.score === undefined
       ? null
-      : { i, x: xAt(i), y: yAt(d.score), color: STRIPE_COLORS[i % STRIPE_COLORS.length] }
+      : { i, x: xAt(i), y: yAt(d.score), color: accentColor }
   );
 
   const presentPoints = points.filter(Boolean);
@@ -185,8 +285,7 @@ function MoodChart({ data, ticks }) {
   const hasData = points.some((p) => p !== null);
 
   return (
-    <div className="flex-1 relative w-full min-h-[260px]">
-      {/* Gridlines + Y-axis labels */}
+    <div className="flex-1 relative w-full min-h-[220px]">
       <div className="absolute inset-0 flex flex-col justify-between pt-2 pb-14 pl-2 pr-10">
         {[10, 8, 6, 4, 2, 0].map((val) => (
           <div key={val} className="w-full flex items-center gap-4">
@@ -201,7 +300,6 @@ function MoodChart({ data, ticks }) {
         ))}
       </div>
 
-      {/* Chart body */}
       <div className="absolute inset-0 pt-2 pb-14 pl-2 pr-10">
         {hasData ? (
           <div className="relative w-full h-full">
@@ -211,15 +309,15 @@ function MoodChart({ data, ticks }) {
               preserveAspectRatio="none"
             >
               <defs>
-                <linearGradient id="moodGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#b2def9" stopOpacity="0.25" />
-                  <stop offset="100%" stopColor="#b2def9" stopOpacity="0" />
+                <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={accentColor} stopOpacity="0.25" />
+                  <stop offset="100%" stopColor={accentColor} stopOpacity="0" />
                 </linearGradient>
               </defs>
-              <path d={areaPath} fill="url(#moodGradient)" />
+              <path d={areaPath} fill={`url(#${gradientId})`} />
               <path
                 d={linePath}
-                stroke="#b2def9"
+                stroke={accentColor}
                 strokeWidth="0.6"
                 fill="none"
                 strokeLinecap="round"
@@ -250,13 +348,12 @@ function MoodChart({ data, ticks }) {
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <p style={{ color: "var(--placeholder-color)" }} className="text-center">
-              No mood data for this period — log your mood to start the chart.
+              {emptyMessage || "No data for this period."}
             </p>
           </div>
         )}
       </div>
 
-      {/* X-axis tick labels */}
       <div className="absolute bottom-0 left-0 right-10 h-12">
         {ticks.map((tick) => (
           <div
@@ -304,6 +401,38 @@ function previewOf(body) {
 }
 
 // ──────────────────────────────────────────────────────────
+// Period toggle
+// ──────────────────────────────────────────────────────────
+
+function PeriodToggle({ value, onChange }) {
+  return (
+    <div
+      className="flex items-center rounded-[12px] p-1"
+      style={{
+        backgroundColor: "var(--input-bg)",
+        border: "1px solid var(--border-light)",
+      }}
+    >
+      {PERIODS.map((p) => (
+        <button
+          key={p.id}
+          type="button"
+          onClick={() => onChange(p.id)}
+          className="px-[14px] py-[6px] rounded-[8px] font-medium text-[13px] transition-colors border-none cursor-pointer"
+          style={{
+            backgroundColor: value === p.id ? "var(--card-bg)" : "transparent",
+            color: value === p.id ? "var(--body-color)" : "var(--muted-color)",
+            boxShadow: value === p.id ? "var(--shadow-sm)" : "none",
+          }}
+        >
+          {p.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────────────────
 // Page
 // ──────────────────────────────────────────────────────────
 
@@ -311,6 +440,7 @@ function DashboardContent() {
   const { user } = useAuth();
   const router = useRouter();
   const [period, setPeriod] = useState("week");
+  const [positivityPeriod, setPositivityPeriod] = useState("week");
   const [questionnaires, setQuestionnaires] = useState([]);
   const [journals, setJournals] = useState([]);
   const [loadingChart, setLoadingChart] = useState(true);
@@ -362,11 +492,22 @@ function DashboardContent() {
     return () => { cancelled = true; };
   }, []);
 
-  const chart = useMemo(() => buildChartForPeriod(period, questionnaires), [period, questionnaires]);
-  const rangeLabel = useMemo(
-    () => formatRange(chart.startDate, chart.endDate, period),
-    [chart.startDate, chart.endDate, period]
+  const metricCharts = useMemo(
+    () => METRIC_CHARTS.map((m) => ({ ...m, chart: buildChartForPeriod(period, questionnaires, m.field) })),
+    [period, questionnaires]
   );
+
+  const rangeLabel = useMemo(
+    () => metricCharts[0] ? formatRange(metricCharts[0].chart.startDate, metricCharts[0].chart.endDate, period) : "",
+    [metricCharts, period]
+  );
+
+  const positivityChart = useMemo(() => buildPositivityChart(positivityPeriod, journals), [positivityPeriod, journals]);
+  const positivityRangeLabel = useMemo(
+    () => formatRange(positivityChart.startDate, positivityChart.endDate, positivityPeriod),
+    [positivityChart, positivityPeriod]
+  );
+
   const recentJournals = journals.slice(0, 3);
   const displayName = user?.username || "there";
 
@@ -378,6 +519,7 @@ function DashboardContent() {
       <AppHeader logout />
 
       <main className="flex-1 w-full p-[24px] md:p-[64px] flex flex-col gap-[32px] md:gap-[48px]">
+        {/* Welcome + log mood */}
         <div className="flex w-full items-center justify-between gap-6 flex-wrap">
           <h1
             className="font-semibold text-[32px] md:text-[44px] tracking-tight m-0"
@@ -418,77 +560,71 @@ function DashboardContent() {
           </div>
         )}
 
-        <div className="flex flex-col lg:flex-row items-stretch gap-[32px] md:gap-[40px] w-full flex-1">
-          {/* Mood chart */}
-          <div className="flex-[2.5] flex flex-col">
-            <div
-              className="relative w-full min-h-[420px] lg:aspect-[2/1] rounded-[32px] p-[24px] md:p-[40px] shadow-sm flex flex-col gap-[16px] md:gap-[24px]"
-              style={{
-                backgroundColor: "var(--card-bg)",
-                border: "1px solid var(--border-light)",
-                transition: "background-color 0.3s, border-color 0.3s",
-              }}
+        {/* 3 metric charts */}
+        <div className="flex flex-col gap-[20px]">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <h2
+              className="font-semibold text-[20px] md:text-[24px] tracking-tight m-0"
+              style={{ color: "var(--body-color)" }}
             >
-              <div className="flex items-center justify-between gap-4 flex-wrap">
-                <h2
-                  className="font-semibold text-[20px] md:text-[24px] tracking-tight"
-                  style={{ color: "var(--body-color)" }}
+              Mental Health Metrics
+            </h2>
+            <div className="flex items-center gap-3 flex-wrap">
+              <PeriodToggle value={period} onChange={setPeriod} />
+              <div
+                className="flex items-center gap-[12px] px-[16px] py-[8px] rounded-[12px]"
+                style={{
+                  backgroundColor: "var(--input-bg)",
+                  border: "1px solid var(--border-light)",
+                }}
+              >
+                <span
+                  className="font-medium text-[13px] whitespace-nowrap"
+                  style={{ color: "var(--secondary-color)" }}
                 >
-                  Mood Analytics
-                </h2>
-
-                <div className="flex items-center gap-3 flex-wrap">
-                  <div
-                    className="flex items-center rounded-[12px] p-1"
-                    style={{
-                      backgroundColor: "var(--input-bg)",
-                      border: "1px solid var(--border-light)",
-                    }}
-                  >
-                    {PERIODS.map((p) => (
-                      <button
-                        key={p.id}
-                        type="button"
-                        onClick={() => setPeriod(p.id)}
-                        className="px-[14px] py-[6px] rounded-[8px] font-medium text-[13px] transition-colors border-none cursor-pointer"
-                        style={{
-                          backgroundColor: period === p.id ? "var(--card-bg)" : "transparent",
-                          color: period === p.id ? "var(--body-color)" : "var(--muted-color)",
-                          boxShadow: period === p.id ? "var(--shadow-sm)" : "none",
-                        }}
-                      >
-                        {p.label}
-                      </button>
-                    ))}
-                  </div>
-
-                  <div
-                    className="flex items-center gap-[12px] px-[16px] py-[8px] rounded-[12px]"
-                    style={{
-                      backgroundColor: "var(--input-bg)",
-                      border: "1px solid var(--border-light)",
-                    }}
-                  >
-                    <span
-                      className="font-medium text-[13px] whitespace-nowrap"
-                      style={{ color: "var(--secondary-color)" }}
-                    >
-                      {rangeLabel}
-                    </span>
-                  </div>
-                </div>
+                  {rangeLabel}
+                </span>
               </div>
-
-              {loadingChart ? (
-                <p className="flex-1 flex items-center justify-center" style={{ color: "var(--muted-color)" }}>
-                  Loading…
-                </p>
-              ) : (
-                <MoodChart data={chart.data} ticks={chart.ticks} />
-              )}
             </div>
           </div>
 
+          <div className="grid grid-cols-1 gap-[20px]">
+            {metricCharts.map(({ field, label, color, gradientId, emptyMsg, chart }) => (
+              <div
+                key={field}
+                className="rounded-[24px] p-[20px] md:p-[28px] shadow-sm flex flex-col gap-[12px] min-h-[280px]"
+                style={{
+                  backgroundColor: "var(--card-bg)",
+                  border: "1px solid var(--border-light)",
+                  transition: "background-color 0.3s, border-color 0.3s",
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }} />
+                  <span className="font-semibold text-[16px]" style={{ color: "var(--body-color)" }}>
+                    {label}
+                  </span>
+                </div>
+                {loadingChart ? (
+                  <div className="flex-1 flex items-center justify-center">
+                    <p style={{ color: "var(--muted-color)" }} className="text-sm">Loading…</p>
+                  </div>
+                ) : (
+                  <MoodChart
+                    data={chart.data}
+                    ticks={chart.ticks}
+                    accentColor={color}
+                    gradientId={gradientId}
+                    emptyMessage={emptyMsg}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Recent journals + positivity chart */}
+        <div className="flex flex-col lg:flex-row items-stretch gap-[32px] md:gap-[40px] w-full">
           {/* Recent journal entries */}
           <div
             className="flex-1 flex flex-col rounded-[32px] p-[28px] md:p-[40px] shadow-sm"
@@ -562,6 +698,57 @@ function DashboardContent() {
               >
                 View All Journals
               </Link>
+            </div>
+          </div>
+
+          {/* Positivity score chart */}
+          <div className="flex-[2] flex flex-col">
+            <div
+              className="relative w-full min-h-[360px] rounded-[32px] p-[24px] md:p-[40px] shadow-sm flex flex-col gap-[16px] md:gap-[24px]"
+              style={{
+                backgroundColor: "var(--card-bg)",
+                border: "1px solid var(--border-light)",
+                transition: "background-color 0.3s, border-color 0.3s",
+              }}
+            >
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <h2
+                  className="font-semibold text-[20px] md:text-[24px] tracking-tight"
+                  style={{ color: "var(--body-color)" }}
+                >
+                  Journal Positivity Score
+                </h2>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <PeriodToggle value={positivityPeriod} onChange={setPositivityPeriod} />
+                  <div
+                    className="flex items-center px-[16px] py-[8px] rounded-[12px]"
+                    style={{
+                      backgroundColor: "var(--input-bg)",
+                      border: "1px solid var(--border-light)",
+                    }}
+                  >
+                    <span
+                      className="font-medium text-[13px] whitespace-nowrap"
+                      style={{ color: "var(--secondary-color)" }}
+                    >
+                      {positivityRangeLabel}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              {loadingJournals ? (
+                <p className="flex-1 flex items-center justify-center" style={{ color: "var(--muted-color)" }}>
+                  Loading…
+                </p>
+              ) : (
+                <MoodChart
+                  data={positivityChart.data}
+                  ticks={positivityChart.ticks}
+                  accentColor="#b2f9c8"
+                  gradientId="positivityGradient"
+                  emptyMessage="No journal entries for this period — write a journal to start tracking positivity."
+                />
+              )}
             </div>
           </div>
         </div>

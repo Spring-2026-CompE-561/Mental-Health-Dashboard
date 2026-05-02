@@ -121,33 +121,39 @@ class TestQuestionnaireIntegration:
         # Submit mood score
         submit_resp = client.post(
             "/api/questionnaires",
-            json={"score": 8},
+            json={"mood": 8, "depression": 4, "anxiety": 3},
             headers=auth_headers,
         )
         assert submit_resp.status_code in (200, 201)
         entry = submit_resp.json()
-        assert entry["score"] == 8
+        assert entry["mood"] == 8
+        assert entry["depression"] == 4
+        assert entry["anxiety"] == 3
 
         # Retrieve today's entry
         today_resp = client.get("/api/questionnaires/today", headers=auth_headers)
         assert today_resp.status_code == 200
         today = today_resp.json()
-        assert today["score"] == 8
+        assert today["mood"] == 8
 
-        # Update score (upsert behavior)
+        # Update via upsert (post again on same day)
         update_resp = client.post(
             "/api/questionnaires",
-            json={"score": 6},
+            json={"mood": 6, "depression": 2, "anxiety": 2},
             headers=auth_headers,
         )
         assert update_resp.status_code in (200, 201)
 
         # Check updated value
         today_after = client.get("/api/questionnaires/today", headers=auth_headers)
-        assert today_after.json()["score"] == 6
+        assert today_after.json()["mood"] == 6
 
     def test_list_questionnaires_returns_array(self, client, auth_headers):
-        client.post("/api/questionnaires", json={"score": 7}, headers=auth_headers)
+        client.post(
+            "/api/questionnaires",
+            json={"mood": 7, "depression": 3, "anxiety": 3},
+            headers=auth_headers,
+        )
         resp = client.get("/api/questionnaires", headers=auth_headers)
         assert resp.status_code == 200
         data = resp.json()
@@ -155,7 +161,11 @@ class TestQuestionnaireIntegration:
         assert len(data) >= 1
 
     def test_average_endpoint(self, client, auth_headers):
-        client.post("/api/questionnaires", json={"score": 5}, headers=auth_headers)
+        client.post(
+            "/api/questionnaires",
+            json={"mood": 5, "depression": 5, "anxiety": 5},
+            headers=auth_headers,
+        )
         resp = client.get("/api/questionnaires/average", headers=auth_headers)
         assert resp.status_code == 200
 
