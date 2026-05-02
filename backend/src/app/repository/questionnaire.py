@@ -8,17 +8,38 @@ from sqlalchemy.orm import Session
 from app.models.questionnaire import Questionnaire
 
 
-def create_questionnaire(db: Session, user_id: int, score: float) -> Questionnaire:
+def _calculate_score(mood: float, depression: float, anxiety: float) -> float:
+    """Average the 3 question scores and scale to 0–100."""
+    return round((mood + depression + anxiety) / 3 * 10, 2)
+
+
+def create_questionnaire(
+    db: Session,
+    user_id: int,
+    mood: float,
+    depression: float,
+    anxiety: float,
+) -> Questionnaire:
     """Insert a new questionnaire record and return it."""
     entry = Questionnaire(
         user_id=user_id,
-        score=score,
+        mood=mood,
+        depression=depression,
+        anxiety=anxiety,
+        score=_calculate_score(mood, depression, anxiety),
         created_at=date.today(),
     )
     db.add(entry)
     db.commit()
     db.refresh(entry)
     return entry
+
+
+def get_questionnaire_by_user_and_date(db: Session, user_id: int, for_date: date) -> Questionnaire | None:
+    """Return the questionnaire for a specific user and date, or None."""
+    return (
+        db.query(Questionnaire).filter(Questionnaire.user_id == user_id, Questionnaire.created_at == for_date).first()
+    )
 
 
 def get_questionnaire_by_id(db: Session, questionnaire_id: int) -> Questionnaire | None:
@@ -49,9 +70,18 @@ def get_average_score(
     return round(result, 2) if result is not None else None
 
 
-def update_questionnaire(db: Session, questionnaire: Questionnaire, score: float) -> Questionnaire:
-    """Update the score of an existing questionnaire and return the updated record."""
-    questionnaire.score = score
+def update_questionnaire(
+    db: Session,
+    questionnaire: Questionnaire,
+    mood: float,
+    depression: float,
+    anxiety: float,
+) -> Questionnaire:
+    """Update question scores and recalculate total score."""
+    questionnaire.mood = mood
+    questionnaire.depression = depression
+    questionnaire.anxiety = anxiety
+    questionnaire.score = _calculate_score(mood, depression, anxiety)
     db.commit()
     db.refresh(questionnaire)
     return questionnaire

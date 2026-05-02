@@ -103,9 +103,8 @@ export async function deleteJournal(id) {
 // Questionnaires
 // ──────────────────────────────────────────────────────────
 
-export async function createQuestionnaire({ score }) {
-  // Backend upserts on the server side: sending twice in a day updates the existing entry.
-  const { data } = await api.post('/questionnaires/', { score });
+export async function createQuestionnaire({ mood, depression, anxiety }) {
+  const { data } = await api.post('/questionnaires/', { mood, depression, anxiety });
   return data;
 }
 

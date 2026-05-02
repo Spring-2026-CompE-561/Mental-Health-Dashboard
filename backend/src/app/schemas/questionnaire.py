@@ -6,13 +6,29 @@ from pydantic import BaseModel, ConfigDict, field_validator
 
 
 class QuestionnaireBase(BaseModel):
-    score: float
+    mood: float
+    depression: float
+    anxiety: float
 
-    @field_validator("score")
+    @field_validator("mood")
     @classmethod
-    def score_must_be_valid(cls, v: float) -> float:
-        if not (0 <= v <= 100):
-            raise ValueError("Score must be between 0 and 100")
+    def validate_mood(cls, v: float) -> float:
+        if not (0 <= v <= 10):
+            raise ValueError("mood must be between 0 and 10")
+        return v
+
+    @field_validator("depression")
+    @classmethod
+    def validate_depression(cls, v: float) -> float:
+        if not (0 <= v <= 10):
+            raise ValueError("depression must be between 0 and 10")
+        return v
+
+    @field_validator("anxiety")
+    @classmethod
+    def validate_anxiety(cls, v: float) -> float:
+        if not (0 <= v <= 10):
+            raise ValueError("anxiety must be between 0 and 10")
         return v
 
 
@@ -29,6 +45,7 @@ class QuestionnaireResponse(QuestionnaireBase):
 
     id: int
     user_id: int
+    score: float | None = None
     created_at: date
 
 
