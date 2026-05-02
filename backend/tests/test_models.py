@@ -59,13 +59,15 @@ def test_create_questionnaire(db):
     db.add(user)
     db.commit()
 
-    questionnaire = Questionnaire(user_id=user.id, score=7.5)
+    questionnaire = Questionnaire(user_id=user.id, mood=7.0, depression=3.0, anxiety=4.0, score=46.67)
     db.add(questionnaire)
     db.commit()
 
     result = db.query(Questionnaire).filter_by(user_id=user.id).first()
     assert result is not None
-    assert result.score == 7.5
+    assert result.mood == 7.0
+    assert result.depression == 3.0
+    assert result.score == 46.67
 
 
 def test_user_journal_relationship(db):

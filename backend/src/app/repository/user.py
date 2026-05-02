@@ -1,5 +1,7 @@
 """CRUD operations for the User model."""
 
+from __future__ import annotations
+
 from datetime import date
 
 from sqlalchemy.orm import Session

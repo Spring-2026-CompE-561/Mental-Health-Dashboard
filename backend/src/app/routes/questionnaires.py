@@ -1,5 +1,7 @@
 """API endpoints for questionnaire CRUD and score aggregation."""
 
+from __future__ import annotations
+
 from datetime import date
 
 from fastapi import APIRouter, Depends, Query, status
@@ -27,7 +29,7 @@ from app.services.questionnaire_service import (
 router = APIRouter()
 
 
-@router.post("/", response_model=QuestionnaireResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=QuestionnaireResponse, status_code=status.HTTP_201_CREATED)
 async def save_questionnaire(
     data: QuestionnaireCreate,
     db: Session = Depends(get_db),
@@ -57,7 +59,7 @@ async def get_today_questionnaire(
     return get_today(db, current_user)
 
 
-@router.get("/", response_model=list[QuestionnaireResponse])
+@router.get("", response_model=list[QuestionnaireResponse])
 async def get_questionnaires(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),

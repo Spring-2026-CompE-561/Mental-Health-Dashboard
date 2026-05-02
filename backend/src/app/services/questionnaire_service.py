@@ -1,5 +1,7 @@
 """Business logic for questionnaire creation, retrieval, and management."""
 
+from __future__ import annotations
+
 from datetime import date
 
 from fastapi import HTTPException, status
@@ -18,7 +20,7 @@ from app.repository.questionnaire import (
 )
 from app.repository.questionnaire import (
     get_questionnaire_by_id,
-    get_questionnaire_by_user_and_date,
+    get_questionnaire_for_date,
     get_questionnaires_by_user,
 )
 from app.repository.questionnaire import (
@@ -29,6 +31,9 @@ from app.schemas.questionnaire import QuestionnaireCreate, QuestionnaireUpdate
 
 def create(db: Session, user: User, data: QuestionnaireCreate) -> Questionnaire:
     """Create a new questionnaire entry for the given user."""
+    existing = get_questionnaire_for_date(db, user_id=user.id, target_date=date.today())
+    if existing:
+        return repo_update(db, existing, mood=data.mood, depression=data.depression, anxiety=data.anxiety)
     return repo_create(
         db,
         user_id=user.id,
@@ -40,7 +45,7 @@ def create(db: Session, user: User, data: QuestionnaireCreate) -> Questionnaire:
 
 def get_today(db: Session, user: User) -> Questionnaire | None:
     """Return today's questionnaire entry for the user, or None."""
-    return get_questionnaire_by_user_and_date(db, user_id=user.id, for_date=date.today())
+    return get_questionnaire_for_date(db, user_id=user.id, target_date=date.today())
 
 
 def get_all(db: Session, user: User) -> list[Questionnaire]:
@@ -82,13 +87,7 @@ def average(
 def update(db: Session, user: User, questionnaire_id: int, data: QuestionnaireUpdate) -> Questionnaire:
     """Update the scores of an existing questionnaire, enforcing ownership."""
     entry = get_one(db, user, questionnaire_id)  # handles 404 + 403
-    return repo_update(
-        db,
-        entry,
-        mood=data.mood,
-        depression=data.depression,
-        anxiety=data.anxiety,
-    )
+    return repo_update(db, entry, mood=data.mood, depression=data.depression, anxiety=data.anxiety)
 
 
 def remove(db: Session, user: User, questionnaire_id: int) -> None:

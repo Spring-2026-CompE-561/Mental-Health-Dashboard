@@ -1,5 +1,7 @@
 """CRUD operations for the Questionnaire model."""
 
+from __future__ import annotations
+
 from datetime import date
 
 from sqlalchemy import func
@@ -9,7 +11,7 @@ from app.models.questionnaire import Questionnaire
 
 
 def _calculate_score(mood: float, depression: float, anxiety: float) -> float:
-    """Average the 3 question scores and scale to 0–100."""
+    """Average the 3 question scores and scale to 0-100."""
     return round((mood + depression + anxiety) / 3 * 10, 2)
 
 
@@ -35,10 +37,12 @@ def create_questionnaire(
     return entry
 
 
-def get_questionnaire_by_user_and_date(db: Session, user_id: int, for_date: date) -> Questionnaire | None:
-    """Return the questionnaire for a specific user and date, or None."""
+def get_questionnaire_for_date(db: Session, user_id: int, target_date: date) -> Questionnaire | None:
+    """Return the questionnaire for a specific user and date, or None if none exists."""
     return (
-        db.query(Questionnaire).filter(Questionnaire.user_id == user_id, Questionnaire.created_at == for_date).first()
+        db.query(Questionnaire)
+        .filter(Questionnaire.user_id == user_id, Questionnaire.created_at == target_date)
+        .first()
     )
 
 

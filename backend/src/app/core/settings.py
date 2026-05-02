@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
 
     # Frontend origin — used for CORS, OAuth redirects back to the SPA, and password-reset links
-    frontend_url: str = "http://localhost:5173"
+    frontend_url: str = "http://localhost:3000"
 
     # Google OAuth
     google_client_id: str = ""

@@ -35,6 +35,11 @@ def setup_database():
     import app.models  # noqa: F401
 
     Base.metadata.create_all(bind=test_engine)
+
+    # Clear rate limiter state before each test so tests are not rate-limited
+    from app.main import _rate_limit_store
+    _rate_limit_store.clear()
+
     yield
     Base.metadata.drop_all(bind=test_engine)
 
