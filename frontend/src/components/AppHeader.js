@@ -1,27 +1,30 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Logo from "./Logo";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 
-/**
- * Shared header used across pages. The right side can be:
- *   - links: array of { label, href } pairs
- *   - logout: true to show a Logout action (takes priority over links when authenticated)
- */
-export default function AppHeader({ title = "Mental Health Dashboard", links = [], logout = false }) {
+const NAV_LINKS = [
+  { label: "Dashboard", href: "/dashboard" },
+  { label: "Journals", href: "/journals" },
+  { label: "Questionnaire", href: "/questionnaire" },
+  { label: "Settings", href: "/settings" },
+];
+
+export default function AppHeader({ title = "Mental Health Dashboard", links = [] }) {
   const { isAuthenticated, signOut } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const router = useRouter();
+  const pathname = usePathname();
 
   async function handleLogout() {
     await signOut();
     router.push("/login");
   }
 
-  const showLogout = logout && isAuthenticated;
+  const navLinks = isAuthenticated ? NAV_LINKS : links;
 
   return (
     <header
@@ -43,20 +46,27 @@ export default function AppHeader({ title = "Mental Health Dashboard", links = [
       </Link>
 
       <nav className="flex items-center gap-4 md:gap-[36px]">
-        {!showLogout &&
-          links.map((link) => (
+        {navLinks.map((link) => {
+          const isActive = pathname === link.href;
+          return (
             <Link
               key={link.href}
               href={link.href}
               className="font-medium text-[16px] md:text-[18px] transition-colors no-underline"
-              style={{ color: "var(--secondary-color)" }}
+              style={{
+                color: isActive ? "var(--heading-color)" : "var(--secondary-color)",
+                fontWeight: isActive ? 700 : 500,
+              }}
               onMouseEnter={(e) => (e.currentTarget.style.color = "var(--heading-color)")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--secondary-color)")}
+              onMouseLeave={(e) => {
+                if (!isActive) e.currentTarget.style.color = "var(--secondary-color)";
+              }}
             >
               {link.label}
             </Link>
-          ))}
-        {showLogout && (
+          );
+        })}
+        {isAuthenticated && (
           <button
             type="button"
             onClick={handleLogout}
