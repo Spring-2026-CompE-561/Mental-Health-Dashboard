@@ -12,7 +12,7 @@ from app.models.questionnaire import Questionnaire
 
 def _calculate_score(mood: float, depression: float, anxiety: float) -> float:
     """Average the 3 question scores and scale to 0-100."""
-    return round((mood + depression + anxiety) / 3 * 10, 2)
+    return round((mood + (10 - depression) + (10 - anxiety)) / 3 * 10, 2)
 
 
 def create_questionnaire(

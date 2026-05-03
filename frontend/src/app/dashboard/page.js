@@ -21,6 +21,67 @@ const METRIC_CHARTS = [
 ];
 
 // ──────────────────────────────────────────────────────────
+// Score helpers
+// ──────────────────────────────────────────────────────────
+
+function getAverageScore(questionnaires) {
+  if (!questionnaires.length) return null;
+  const total = questionnaires.reduce((sum, q) => sum + q.score, 0);
+  return Math.round(total / questionnaires.length);
+}
+
+// ──────────────────────────────────────────────────────────
+// Average Score Card
+// ──────────────────────────────────────────────────────────
+
+function AverageScoreCard({ score }) {
+  const isEmpty = score === null;
+  const color =
+    isEmpty ? "var(--muted-color)"
+    : score >= 70 ? "#b2f9c8"
+    : score >= 40 ? "#f9f0b2"
+    : "#f9b2d7";
+
+  const label =
+    isEmpty ? "No data yet"
+    : score >= 70 ? "Good"
+    : score >= 40 ? "Moderate"
+    : "Low";
+
+  return (
+    <div
+      className="flex flex-col gap-[6px] rounded-[24px] px-[28px] py-[20px] shadow-sm"
+      style={{
+        backgroundColor: "var(--card-bg)",
+        border: "1px solid var(--border-light)",
+        transition: "background-color 0.3s, border-color 0.3s",
+        minWidth: 160,
+      }}
+    >
+      <span
+        className="font-semibold text-[11px] uppercase tracking-widest"
+        style={{ color: "var(--muted-color)" }}
+      >
+        Avg. Wellness Score
+      </span>
+      <div className="flex items-end gap-[8px]">
+        <span className="font-bold text-[44px] leading-none" style={{ color }}>
+          {isEmpty ? "—" : score}
+        </span>
+        {!isEmpty && (
+          <span className="font-semibold text-[14px] pb-[6px]" style={{ color }}>
+            / 100
+          </span>
+        )}
+      </div>
+      <span className="font-medium text-[13px]" style={{ color }}>
+        {label}
+      </span>
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────────────────
 // Date helpers
 // ──────────────────────────────────────────────────────────
 
@@ -446,6 +507,15 @@ function DashboardContent() {
   const [loadingChart, setLoadingChart] = useState(true);
   const [loadingJournals, setLoadingJournals] = useState(true);
   const [error, setError] = useState("");
+  const [refetchCount, setRefetchCount] = useState(0);
+
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") setRefetchCount((c) => c + 1);
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -473,7 +543,7 @@ function DashboardContent() {
       });
 
     return () => { cancelled = true; };
-  }, [period]);
+  }, [period, refetchCount]);
 
   useEffect(() => {
     let cancelled = false;
@@ -491,6 +561,8 @@ function DashboardContent() {
       });
     return () => { cancelled = true; };
   }, []);
+
+  const averageScore = useMemo(() => getAverageScore(questionnaires), [questionnaires]);
 
   const metricCharts = useMemo(
     () => METRIC_CHARTS.map((m) => ({ ...m, chart: buildChartForPeriod(period, questionnaires, m.field) })),
@@ -528,26 +600,30 @@ function DashboardContent() {
             Welcome back, <span className="text-[#b2def9]">{displayName}</span>!
           </h1>
 
-          <div
-            className="flex items-center gap-[16px] md:gap-[24px] rounded-[24px] px-[24px] md:px-[32px] py-[16px] md:py-[20px] shadow-sm"
-            style={{
-              backgroundColor: "var(--card-bg)",
-              border: "1px solid var(--border-light)",
-              transition: "background-color 0.3s, border-color 0.3s",
-            }}
-          >
-            <p className="font-normal text-[16px] md:text-[18px] m-0" style={{ color: "var(--secondary-color)" }}>
-              How are you feeling today?
-            </p>
-            <button
-              type="button"
-              onClick={() => router.push("/questionnaire")}
-              className="bg-[#b2def9] rounded-[16px] shadow-[0px_4px_16px_rgba(178,222,249,0.4)] flex items-center justify-center px-[24px] h-[48px] hover:opacity-90 transition-opacity border-none cursor-pointer"
+          <div className="flex items-center gap-[16px] flex-wrap">
+            <AverageScoreCard score={averageScore} />
+
+            <div
+              className="flex items-center gap-[16px] md:gap-[24px] rounded-[24px] px-[24px] md:px-[32px] py-[16px] md:py-[20px] shadow-sm"
+              style={{
+                backgroundColor: "var(--card-bg)",
+                border: "1px solid var(--border-light)",
+                transition: "background-color 0.3s, border-color 0.3s",
+              }}
             >
-              <span className="font-semibold text-[15px] text-white tracking-wide">
-                Log your mood
-              </span>
-            </button>
+              <p className="font-normal text-[16px] md:text-[18px] m-0" style={{ color: "var(--secondary-color)" }}>
+                How are you feeling today?
+              </p>
+              <button
+                type="button"
+                onClick={() => router.push("/questionnaire")}
+                className="bg-[#b2def9] rounded-[16px] shadow-[0px_4px_16px_rgba(178,222,249,0.4)] flex items-center justify-center px-[24px] h-[48px] hover:opacity-90 transition-opacity border-none cursor-pointer"
+              >
+                <span className="font-semibold text-[15px] text-white tracking-wide">
+                  Log your mood
+                </span>
+              </button>
+            </div>
           </div>
         </div>
 
