@@ -510,6 +510,10 @@ function DashboardContent() {
 
   const recentJournals = journals.slice(0, 3);
   const displayName = user?.username || "there";
+  const isReturning = typeof window !== "undefined" && localStorage.getItem(`visited_${user?.id}`) === "true";
+  if (typeof window !== "undefined" && user?.id) {
+    localStorage.setItem(`visited_${user?.id}`, "true");
+  }
 
   return (
     <div
@@ -525,7 +529,7 @@ function DashboardContent() {
             className="font-semibold text-[32px] md:text-[44px] tracking-tight m-0"
             style={{ color: "var(--heading-color)" }}
           >
-            Welcome back, <span className="text-[#b2def9]">{displayName}</span>!
+            {isReturning ? "Welcome back, " : "Welcome, "}<span className="text-[#b2def9]">{displayName}</span>!
           </h1>
 
           <div
