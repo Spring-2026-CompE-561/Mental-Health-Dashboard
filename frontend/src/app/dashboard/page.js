@@ -510,10 +510,14 @@ function DashboardContent() {
 
   const recentJournals = journals.slice(0, 3);
   const displayName = user?.username || "there";
-  const isReturning = typeof window !== "undefined" && localStorage.getItem(`visited_${user?.id}`) === "true";
-  if (typeof window !== "undefined" && user?.id) {
-    localStorage.setItem(`visited_${user?.id}`, "true");
-  }
+
+  const [isReturning] = useState(() => {
+  if (typeof window === "undefined") return false;
+  const key = `visited_${localStorage.getItem("access_token")}`;
+  const seen = localStorage.getItem(key) === "true";
+  if (!seen) localStorage.setItem(key, "true");
+  return seen;
+});
 
   return (
     <div
