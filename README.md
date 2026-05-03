@@ -8,9 +8,9 @@ A comprehensive full-stack web application designed to help users track and anal
 
 ### Prerequisites
 
-- [uv](https://docs.astral.sh/uv/) — Python package manager (backend)
-- [Node.js](https://nodejs.org/) — for the frontend
-- [Docker](https://www.docker.com/) — optional, for containerized setup
+- [uv](https://docs.astral.sh/uv/): Python package manager (backend)
+- [Node.js](https://nodejs.org/): For the frontend
+- [Docker](https://www.docker.com/): Optional, for containerized setup
 
 ### Option A: Docker (Recommended)
 
@@ -157,7 +157,7 @@ POST body requires `mood`, `depression`, and `anxiety` fields, each a float betw
 
 ---
 
-## Project Structure
+## Project Structure 
 
 ```
 Mental-Health-Dashboard/
@@ -235,7 +235,6 @@ Mental-Health-Dashboard/
 ├── .env.example
 └── .pre-commit-config.yaml
 ```
-
 ---
 
 ## Team Members
@@ -244,4 +243,4 @@ Mental-Health-Dashboard/
 - Aswathi Ravishankar Ram
 - Nisha Ravankar
 - Surender Varma Bollampally
-- Bryan Stahman
+- Bryan Stahman  
