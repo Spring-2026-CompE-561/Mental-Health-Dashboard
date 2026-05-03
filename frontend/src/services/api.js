@@ -131,4 +131,19 @@ export async function getQuestionnaireAverage({ fromDate, toDate } = {}) {
   return data;
 }
 
+export async function updatePassword(userId, { currentPassword, newPassword }) {
+  const { data } = await api.put(`/users/${userId}`, {
+    current_password: currentPassword,
+    new_password: newPassword,
+  });
+  return data;
+}
+
+export async function deleteAccount(userId, { password }) {
+  const { data } = await api.delete(`/users/${userId}`, {
+    data: { password },
+  });
+  return data;
+}
+
 export default api;
