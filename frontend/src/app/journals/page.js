@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import AppHeader from "@/components/AppHeader";
 import { ProtectedRoute } from "@/contexts/AuthContext";
 import {
@@ -23,12 +23,49 @@ function formatDate(dateString) {
   return d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 }
 
+const SpeechRecognition = typeof window !== "undefined"
+  ? window.SpeechRecognition || window.webkitSpeechRecognition
+  : null;
+
 function JournalModal({ open, mode, initialBody, onClose, onSave, saving }) {
   const [body, setBody] = useState(initialBody || "");
+  const [listening, setListening] = useState(false);
+  const recognitionRef = useRef(null);
 
   useEffect(() => {
+    if (!open && recognitionRef.current) {
+      recognitionRef.current.abort();
+      recognitionRef.current = null;
+      setListening(false);
+    }
     setBody(initialBody || "");
   }, [initialBody, open]);
+
+  function toggleListening() {
+    if (listening && recognitionRef.current) {
+      recognitionRef.current.stop();
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    recognition.lang = "en-US";
+
+    recognition.onresult = (event) => {
+      const transcript = Array.from(event.results)
+        .map((r) => r[0].transcript)
+        .join("");
+      setBody((prev) => (prev ? prev + " " + transcript : transcript));
+    };
+
+    recognition.onend = () => setListening(false);
+    recognition.onerror = () => setListening(false);
+
+    recognitionRef.current = recognition;
+    recognition.start();
+    setListening(true);
+  }
 
   if (!open) return null;
 
@@ -61,27 +98,45 @@ function JournalModal({ open, mode, initialBody, onClose, onSave, saving }) {
           {mode === "edit" ? "Edit entry" : "New journal entry"}
         </h2>
 
-        <textarea
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-          placeholder="What's on your mind today?"
-          rows={10}
-          autoFocus
-          className="w-full rounded-2xl focus:ring-4 focus:ring-[#b2def9]/10 focus:outline-none p-[16px] text-[16px] resize-none transition-all"
-          style={{
-            backgroundColor: "var(--input-bg)",
-            border: "1px solid var(--border-color)",
-            color: "var(--body-color)",
-          }}
-          onFocus={(e) => {
-            e.target.style.borderColor = "#b2def9";
-            e.target.style.backgroundColor = "var(--input-focus-bg)";
-          }}
-          onBlur={(e) => {
-            e.target.style.borderColor = "var(--border-color)";
-            e.target.style.backgroundColor = "var(--input-bg)";
-          }}
-        />
+        <div className="relative">
+          <textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            placeholder="What's on your mind today?"
+            rows={10}
+            autoFocus
+            className="w-full rounded-2xl focus:ring-4 focus:ring-[#b2def9]/10 focus:outline-none p-[16px] pr-[48px] text-[16px] resize-none transition-all"
+            style={{
+              backgroundColor: "var(--input-bg)",
+              border: "1px solid var(--border-color)",
+              color: "var(--body-color)",
+            }}
+            onFocus={(e) => {
+              e.target.style.borderColor = "#b2def9";
+              e.target.style.backgroundColor = "var(--input-focus-bg)";
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = "var(--border-color)";
+              e.target.style.backgroundColor = "var(--input-bg)";
+            }}
+          />
+          {SpeechRecognition && (
+            <button
+              type="button"
+              onClick={toggleListening}
+              className={`absolute bottom-3 right-3 w-[36px] h-[36px] rounded-full border-none cursor-pointer flex items-center justify-center transition-all ${listening ? "bg-[#f9b2d7] animate-pulse" : "hover:opacity-80"}`}
+              style={!listening ? { backgroundColor: "var(--border-color)" } : undefined}
+              title={listening ? "Stop recording" : "Speak to type"}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 1C10.34 1 9 2.34 9 4V12C9 13.66 10.34 15 12 15C13.66 15 15 13.66 15 12V4C15 2.34 13.66 1 12 1Z" fill={listening ? "#fff" : "var(--secondary-color)"} />
+                <path d="M19 10V12C19 15.87 15.87 19 12 19C8.13 19 5 15.87 5 12V10" stroke={listening ? "#fff" : "var(--secondary-color)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M12 19V23" stroke={listening ? "#fff" : "var(--secondary-color)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M8 23H16" stroke={listening ? "#fff" : "var(--secondary-color)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          )}
+        </div>
 
         <div className="flex items-center justify-end gap-[12px]">
           <button
