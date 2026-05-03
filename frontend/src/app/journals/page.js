@@ -138,6 +138,10 @@ function JournalModal({ open, mode, initialBody, onClose, onSave, saving }) {
           )}
         </div>
 
+        <p className="text-[13px] text-right m-0" style={{ color: "var(--muted-color)" }}>
+          {body.trim() ? body.trim().split(/\s+/).length : 0} {body.trim().split(/\s+/).length === 1 && body.trim() ? "word" : "words"}
+        </p>
+
         <div className="flex items-center justify-end gap-[12px]">
           <button
             type="button"
