@@ -107,6 +107,25 @@ a {
   text-decoration: none;
 }
 
+/* ───────────────────────────────────────────────
+   Animations
+   ─────────────────────────────────────────────── */
+
+@keyframes pageIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-page-in {
+  animation: pageIn 300ms ease-out both;
+}
+
 button {
   font-family: inherit;
 }

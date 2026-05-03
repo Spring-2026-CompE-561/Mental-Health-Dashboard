@@ -10,7 +10,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        <Providers>{children}</Providers>
+        <Providers>
+          <div className="animate-page-in">{children}</div>
+        </Providers>
       </body>
     </html>
   );
