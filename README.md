@@ -6,88 +6,102 @@ A comprehensive full-stack web application designed to help users track and anal
 
 ## Setup & Installation
 
-This project uses [uv](https://docs.astral.sh/uv/) for modern dependency management and environment isolation.
+### Prerequisites
 
-### 1. Prerequisites
+- [uv](https://docs.astral.sh/uv/) — Python package manager (backend)
+- [Node.js](https://nodejs.org/) — for the frontend
+- [Docker](https://www.docker.com/) — optional, for containerized setup
 
-Ensure you have `uv` installed on your machine:
+### Option A: Docker (Recommended)
 
 ```bash
-# Mac/Linux
-curl -LsSf https://astral.sh/uv/install.sh | sh
+docker compose up --build
 ```
 
-### 2. Project Initialization
+This starts three services:
+- **PostgreSQL** on port 5432
+- **Backend API** on port 8000
+- **Frontend** on port 3000
 
-Clone the repository and run the following command to create a virtual environment and install all dependencies:
+### Option B: Local Development
 
+**Backend:**
 ```bash
+cd backend
 uv sync
+uv run dev
 ```
 
-### 3. Development Setup
+**Frontend:**
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-To ensure code quality and consistent formatting across the team, you must install the git pre-commit hooks. This will automatically run the linter (Ruff) every time you try to commit code.
+### Development Setup
+
+Install the git pre-commit hooks to automatically run the backend linter (Ruff) on every commit:
 
 ```bash
+cd backend
 uv run pre-commit install
 ```
 
-### 4. Environment Configuration
+For frontend linting:
 
-Create a `.env` file in the `backend/` directory to override default settings:
+```bash
+cd frontend
+npm run lint
+```
+
+### Environment Configuration
+
+Create a `backend/.env` file (see `.env.example` for a full template). Minimum required for local dev:
 
 ```env
 SECRET_KEY=your-long-random-secret-key
 DATABASE_URL=sqlite:///./mental_health_tracker.db
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-ALGORITHM=HS256
+FRONTEND_URL=http://localhost:3000
 ```
+
+Full reference:
 
 | Variable | Default | Description |
 |---|---|---|
-| `SECRET_KEY` | `change-me-to-a-long-random-string` | Secret key used for signing JWT tokens |
-| `DATABASE_URL` | `sqlite:///./mental_health_tracker.db` | SQLAlchemy database connection string |
-| `ACCESS_TOKEN_EXPIRE_MINUTES` | `30` | JWT token expiration time in minutes |
-| `ALGORITHM` | `HS256` | Algorithm used for JWT encoding |
+| `SECRET_KEY` | `change-me-to-a-long-random-string` | JWT signing secret |
+| `DATABASE_URL` | `sqlite:///./mental_health_tracker.db` | SQLAlchemy connection string |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | `30` | JWT token TTL in minutes |
+| `ALGORITHM` | `HS256` | JWT algorithm |
+| `FRONTEND_URL` | `http://localhost:3000` | Frontend origin for CORS and redirects |
+| `GOOGLE_CLIENT_ID` | | Google OAuth client ID |
+| `GOOGLE_CLIENT_SECRET` | | Google OAuth client secret |
+| `GOOGLE_REDIRECT_URI` | `http://localhost:8000/api/auth/google/callback` | OAuth callback URL |
+| `SMTP_HOST` | `smtp.gmail.com` | Mail server for password reset emails |
+| `SMTP_PORT` | `587` | Mail server port |
+| `SMTP_USERNAME` | | Mail account login |
+| `SMTP_PASSWORD` | | Mail account password |
+| `SMTP_FROM_EMAIL` | | Sender email address |
+| `SMTP_USE_TLS` | `true` | Enable STARTTLS |
 
-### 5. Running the Development Server
+### Interactive API Documentation
 
-To start the FastAPI backend with auto-reload enabled:
-
-```bash
-uv run dev
-```
-
-The API will be available at `http://127.0.0.1:8000`.
-
-### 6. Interactive Documentation
-
-Once the server is running, you can explore and test the API endpoints directly via Swagger UI:
+Once the backend is running, API docs are available at:
 
 - **Swagger UI:** http://127.0.0.1:8000/docs
-- **Redoc:** http://127.0.0.1:8000/redoc
+- **ReDoc:** http://127.0.0.1:8000/redoc
 
 ---
 
 ## Running Tests
 
-Tests are written with `pytest` and use an isolated SQLite database so they never touch your development data.
+Tests use an isolated SQLite database and never touch development data.
 
 ```bash
-uv run pytest
-```
-
-To run with verbose output:
-
-```bash
-uv run pytest -v
-```
-
-To run a specific test file:
-
-```bash
-uv run pytest tests/test_auth.py
+cd backend
+uv run pytest                          # run all tests
+uv run pytest -v                       # verbose output
+uv run pytest tests/test_auth.py       # run a specific file
 ```
 
 ---
@@ -103,7 +117,10 @@ All endpoints are prefixed with `/api`. Protected routes require a `Bearer` toke
 | POST | `/api/create-account` | Register a new user | No |
 | POST | `/api/login` | Log in and receive a JWT token | No |
 | POST | `/api/logout` | Log out (client-side token invalidation) | No |
-| GET | `/api/auth/google/callback` | Google OAuth callback | No |
+| POST | `/api/forgot-password` | Request a password reset email | No |
+| POST | `/api/reset-password` | Reset password using a token | No |
+| GET | `/api/auth/google/login` | Get Google OAuth consent URL | No |
+| GET | `/api/auth/google/callback` | Google OAuth callback (redirects to frontend) | No |
 
 ### Users
 
@@ -118,78 +135,105 @@ All endpoints are prefixed with `/api`. Protected routes require a `Bearer` toke
 
 | Method | Endpoint | Description | Auth |
 |---|---|---|---|
-| POST | `/api/journals/create` | Create a journal entry | Yes |
-| GET | `/api/journals/` | Get all journal entries | Yes |
+| POST | `/api/journals/create` | Create a journal entry (sentiment auto-computed) | Yes |
+| GET | `/api/journals/` | Get all journal entries for the logged-in user | Yes |
 | GET | `/api/journals/{id}` | Get a single journal entry | Yes |
 | PUT | `/api/journals/{id}` | Update a journal entry | Yes |
 | DELETE | `/api/journals/{id}` | Delete a journal entry | Yes |
 
 ### Questionnaires
 
+POST body requires `mood`, `depression`, and `anxiety` fields, each a float between 0 and 10.
+
 | Method | Endpoint | Description | Auth |
 |---|---|---|---|
-| POST | `/api/questionnaires/` | Submit a daily questionnaire score | Yes |
-| GET | `/api/questionnaires/` | Get all scores for the logged-in user | Yes |
-| GET | `/api/questionnaires/{id}` | Get a single questionnaire entry | Yes |
-| GET | `/api/questionnaires/average` | Get average score (optional date filtering) | Yes |
-| PUT | `/api/questionnaires/{id}` | Update a questionnaire score | Yes |
-| DELETE | `/api/questionnaires/{id}` | Delete a questionnaire entry | Yes |
+| POST | `/api/questionnaires/` | Submit daily mood, depression, and anxiety scores | Yes |
+| GET | `/api/questionnaires/` | Get all entries for the logged-in user | Yes |
+| GET | `/api/questionnaires/today` | Get today's entry, or null if none submitted | Yes |
+| GET | `/api/questionnaires/average` | Get average score (optional `from_date`/`to_date` params) | Yes |
+| GET | `/api/questionnaires/{id}` | Get a single entry | Yes |
+| PUT | `/api/questionnaires/{id}` | Update an entry | Yes |
+| DELETE | `/api/questionnaires/{id}` | Delete an entry | Yes |
 
 ---
 
 ## Project Structure
 
 ```
-backend/
-├── pyproject.toml
-├── requirements.txt
-├── README.md
-├── src/
-│   └── app/
-│       ├── __init__.py
-│       ├── main.py
-│       ├── api/
-│       │   └── __init__.py
-│       ├── core/
-│       │   ├── __init__.py
-│       │   ├── auth.py
-│       │   ├── database.py
-│       │   ├── dependencies.py
-│       │   └── settings.py
-│       ├── models/
-│       │   ├── __init__.py
-│       │   ├── journal.py
-│       │   ├── questionnaire.py
-│       │   └── user.py
-│       ├── repository/
-│       │   ├── __init__.py
-│       │   ├── journal.py
-│       │   ├── questionnaire.py
-│       │   └── user.py
-│       ├── routes/
-│       │   ├── __init__.py
-│       │   ├── auth.py
-│       │   ├── journal.py
-│       │   ├── questionnaires.py
-│       │   └── users.py
-│       ├── schemas/
-│       │   ├── __init__.py
-│       │   ├── journal.py
-│       │   ├── questionnaire.py
-│       │   ├── token.py
-│       │   └── user.py
+Mental-Health-Dashboard/
+├── backend/
+│   ├── src/app/
+│   │   ├── main.py                     
+│   │   ├── core/
+│   │   │   ├── auth.py                 
+│   │   │   ├── database.py            
+│   │   │   ├── dependencies.py         
+│   │   │   └── settings.py             
+│   │   ├── models/                     
+│   │   │   ├── journal.py
+│   │   │   ├── password_reset.py
+│   │   │   ├── questionnaire.py
+│   │   │   └── user.py
+│   │   ├── schemas/                  
+│   │   │   ├── journal.py
+│   │   │   ├── password_reset.py
+│   │   │   ├── questionnaire.py
+│   │   │   ├── token.py
+│   │   │   └── user.py
+│   │   ├── repository/               
+│   │   │   ├── journal.py
+│   │   │   ├── questionnaire.py
+│   │   │   └── user.py
+│   │   ├── routes/                 
+│   │   │   ├── auth.py
+│   │   │   ├── journal.py
+│   │   │   ├── questionnaires.py
+│   │   │   └── users.py
+│   │   └── services/                 
+│   │       ├── email_service.py
+│   │       ├── google_oauth_service.py
+│   │       ├── journal_service.py
+│   │       ├── password_reset_service.py
+│   │       ├── questionnaire_service.py
+│   │       ├── sentiment.py
+│   │       └── user_service.py
+│   └── tests/
+│       ├── conftest.py
+│       ├── test_auth.py
+│       ├── test_endpoints.py
+│       ├── test_google_oauth.py
+│       ├── test_integration.py
+│       ├── test_journal.py
+│       ├── test_models.py
+│       ├── test_questionnaire_crud.py
+│       ├── test_questionnaire_endpoints.py
+│       └── test_user_crud.py
+├── frontend/
+│   └── src/
+│       ├── app/                       
+│       │   ├── page.js                 
+│       │   ├── layout.js               
+│       │   ├── dashboard/page.js
+│       │   ├── journals/page.js
+│       │   ├── questionnaire/page.js
+│       │   ├── login/page.js
+│       │   ├── create-account/page.js
+│       │   ├── forgot-password/page.js
+│       │   ├── reset-password/page.js
+│       │   └── auth/google/callback/page.js
+│       ├── components/                
+│       │   ├── AppHeader.js
+│       │   ├── GoogleButton.js
+│       │   ├── Logo.js
+│       │   └── Providers.js
+│       ├── contexts/                
+│       │   ├── AuthContext.js
+│       │   └── ThemeContext.js
 │       └── services/
-│           ├── __init__.py
-│           ├── journal_service.py
-│           ├── questionnaire_service.py
-│           └── user_service.py
-└── tests/
-    ├── conftest.py
-    ├── test_auth.py
-    ├── test_endpoints.py
-    ├── test_questionnaire_crud.py
-    ├── test_questionnaire_endpoints.py
-    └── test_user_crud.py
+│           └── api.js               
+├── docker-compose.yml
+├── .env.example
+└── .pre-commit-config.yaml
 ```
 
 ---
