@@ -6,7 +6,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     """Central configuration for the application, populated from env vars."""
 
-    database_url: str = "sqlite:///./mental_health_tracker.db"
+    database_url: str = "postgresql://mhd_user:mhd_pass@localhost:5432/mental_health_db"
     secret_key: str = "change-me-to-a-long-random-string"
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30

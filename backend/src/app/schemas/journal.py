@@ -2,8 +2,6 @@
 
 from datetime import date
 
-from typing import Optional
-
 from pydantic import BaseModel, ConfigDict
 
 
@@ -25,4 +23,3 @@ class JournalResponse(JournalBase):
     id: int
     user_id: int
     created_at: date
-    sentiment_score: Optional[float] = None

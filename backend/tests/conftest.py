@@ -1,7 +1,10 @@
 import os
 
-os.environ["DATABASE_URL"] = "sqlite:////tmp/test_mental_health.db"
+os.environ["DATABASE_URL"] = "postgresql://mhd_user:mhd_pass@localhost:5432/mental_health_test_db"
 os.environ["SECRET_KEY"] = "test-secret-key-for-unit-tests"
+os.environ["SMTP_USERNAME"] = "test@example.com"
+os.environ["SMTP_PASSWORD"] = "test-password"
+os.environ["SMTP_FROM_EMAIL"] = "test@example.com"
 
 import pytest
 from fastapi.testclient import TestClient
@@ -13,9 +16,9 @@ from app.core.database import Base
 from app.core.dependencies import get_db
 from app.main import app as fastapi_app
 
-TEST_DATABASE_URL = "sqlite:////tmp/test_mental_health.db"
+TEST_DATABASE_URL = "postgresql://mhd_user:mhd_pass@localhost:5432/mental_health_test_db"
 
-test_engine = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False})
+test_engine = create_engine(TEST_DATABASE_URL)
 TestSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
 
 
