@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { useTheme } from "@/contexts/ThemeContext";
 
 // ──────────────────────────────────────────────────────────
 // Change Password section
@@ -186,7 +187,37 @@ function DeleteAccountSection({ userId, onDeleted }: { userId: number; onDeleted
     </Card>
   );
 }
+function AppearanceSection() {
+  const { theme, isDark, toggleTheme } = useTheme();
 
+  return (
+    <Card className="mb-6">
+      <CardHeader>
+        <CardTitle>Appearance</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-4">
+        <p className="text-[14px]" style={{ color: "var(--secondary-color)" }}>
+          Choose how the app looks on this device. Your preference is saved automatically.
+        </p>
+
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="font-medium" style={{ color: "var(--body-color)" }}>
+              Dark Mode
+            </p>
+            <p className="text-[13px]" style={{ color: "var(--secondary-color)" }}>
+              Currently using {theme} mode.
+            </p>
+          </div>
+
+          <Button type="button" variant="outline" size="sm" onClick={toggleTheme}>
+            {isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 // ──────────────────────────────────────────────────────────
 // Main Settings page
 // ──────────────────────────────────────────────────────────
@@ -237,10 +268,9 @@ function SettingsContent() {
             </p>
           </CardContent>
         </Card>
-
         {user && <ChangePasswordSection userId={user.id} />}
         {user && <DeleteAccountSection userId={user.id} onDeleted={handleDeleted} />}
-
+        <AppearanceSection />
         {/* Sign out */}
         <Card className="mb-6">
           <CardHeader>
