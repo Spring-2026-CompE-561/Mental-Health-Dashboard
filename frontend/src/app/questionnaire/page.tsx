@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import AppHeader from "@/components/AppHeader";
 import { ProtectedRoute } from "@/contexts/AuthContext";
 import { createQuestionnaire, getTodaysQuestionnaire } from "@/services/api";
@@ -52,7 +53,6 @@ function QuestionnaireContent() {
   const router = useRouter();
   const [values, setValues] = useState(DEFAULT_VALUES);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [existedAtLoad, setExistedAtLoad] = useState(false);
   const [initializing, setInitializing] = useState(true);
 
@@ -78,14 +78,14 @@ function QuestionnaireContent() {
   }, []);
 
   async function handleSubmit() {
-    setError("");
     setLoading(true);
     try {
       await createQuestionnaire(values);
+      toast.success("Mood logged!");
       router.push("/dashboard");
     } catch (err: unknown) {
       const detail = ((err as { response?: { data?: { detail?: string } } }).response?.data?.detail);
-      setError(typeof detail === "string" ? detail : "Could not save your answer. Try again.");
+      toast.error(typeof detail === "string" ? detail : "Could not save your answer. Try again.");
       setLoading(false);
     }
   }
@@ -125,15 +125,6 @@ function QuestionnaireContent() {
               </p>
             )}
           </div>
-
-          {error && (
-            <div
-              className="px-4 py-3 rounded-xl text-sm text-center"
-              style={{ backgroundColor: "var(--error-bg)", color: "var(--error-color)" }}
-            >
-              {error}
-            </div>
-          )}
 
           <div className="flex flex-col gap-[40px] w-full md:px-[24px]">
             {sliders.map(({ key, label, description, color, lowLabel, highLabel }) => {
