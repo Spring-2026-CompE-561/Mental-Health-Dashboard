@@ -17,7 +17,6 @@ interface AppHeaderProps {
 }
 
 const NAV_LINKS: NavLink[] = [
-  { label: "Dashboard", href: "/dashboard" },
   { label: "Journals", href: "/journals" },
   { label: "Questionnaire", href: "/questionnaire" },
   { label: "Settings", href: "/settings" },
@@ -76,18 +75,6 @@ export default function AppHeader({ title = "Mental Health Dashboard", links = [
             </Link>
           );
         })}
-        {isAuthenticated && (
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="font-medium text-[16px] md:text-[18px] transition-colors bg-transparent border-none cursor-pointer p-0"
-            style={{ color: "var(--secondary-color)" }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "var(--heading-color)")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--secondary-color)")}
-          >
-            Logout
-          </button>
-        )}
 
         {/* Dark mode toggle */}
         <button

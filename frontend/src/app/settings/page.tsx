@@ -5,66 +5,10 @@ import { useRouter } from "next/navigation";
 import AppHeader from "@/components/AppHeader";
 import { ProtectedRoute, useAuth } from "@/contexts/AuthContext";
 import { updatePassword, deleteAccount } from "@/services/api";
-
-// ──────────────────────────────────────────────────────────
-// Section card wrapper
-// ──────────────────────────────────────────────────────────
-function SectionCard({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <div
-      className="rounded-2xl p-6 md:p-8 mb-6"
-      style={{
-        backgroundColor: "var(--card-bg)",
-        border: "1px solid var(--border-light)",
-        transition: "background-color 0.3s ease, border-color 0.3s ease",
-      }}
-    >
-      <h2
-        className="text-[18px] font-semibold mb-6"
-        style={{ color: "var(--heading-color)" }}
-      >
-        {title}
-      </h2>
-      {children}
-    </div>
-  );
-}
-
-// ──────────────────────────────────────────────────────────
-// Reusable input field
-// ──────────────────────────────────────────────────────────
-interface FieldProps {
-  label: string;
-  type?: string;
-  value: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
-}
-
-function Field({ label, type = "text", value, onChange, placeholder }: FieldProps) {
-  return (
-    <div className="mb-4">
-      <label
-        className="block text-[14px] font-medium mb-1"
-        style={{ color: "var(--secondary-color)" }}
-      >
-        {label}
-      </label>
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="w-full rounded-lg px-4 py-2 text-[15px] outline-none transition-colors"
-        style={{
-          backgroundColor: "var(--input-bg, #f3f4f6)",
-          border: "1px solid var(--border-light)",
-          color: "var(--body-color)",
-        }}
-      />
-    </div>
-  );
-}
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 // ──────────────────────────────────────────────────────────
 // Change Password section
@@ -107,56 +51,56 @@ function ChangePasswordSection({ userId }: { userId: number }) {
   }
 
   return (
-    <SectionCard title="Change Password">
-      <form onSubmit={handleSubmit}>
-        <Field
-          label="Current Password"
-          type="password"
-          value={currentPassword}
-          onChange={setCurrentPassword}
-          placeholder="Enter current password"
-        />
-        <Field
-          label="New Password"
-          type="password"
-          value={newPassword}
-          onChange={setNewPassword}
-          placeholder="At least 8 characters"
-        />
-        <Field
-          label="Confirm New Password"
-          type="password"
-          value={confirmPassword}
-          onChange={setConfirmPassword}
-          placeholder="Repeat new password"
-        />
+    <Card className="mb-6">
+      <CardHeader>
+        <CardTitle>Change Password</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="current-password">Current Password</Label>
+            <Input
+              id="current-password"
+              type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              placeholder="Enter current password"
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="new-password">New Password</Label>
+            <Input
+              id="new-password"
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="At least 8 characters"
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="confirm-password">Confirm New Password</Label>
+            <Input
+              id="confirm-password"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Repeat new password"
+            />
+          </div>
 
-        {message && (
-          <p className="text-[14px] mb-4" style={{ color: "#22c55e" }}>
-            {message}
-          </p>
-        )}
-        {error && (
-          <p className="text-[14px] mb-4" style={{ color: "#ef4444" }}>
-            {error}
-          </p>
-        )}
+          {message && (
+            <p className="text-[14px]" style={{ color: "#22c55e" }}>{message}</p>
+          )}
+          {error && (
+            <p className="text-[14px]" style={{ color: "#ef4444" }}>{error}</p>
+          )}
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="rounded-lg px-6 py-2 text-[15px] font-medium transition-opacity"
-          style={{
-            backgroundColor: "var(--heading-color)",
-            color: "var(--card-bg)",
-            opacity: loading ? 0.6 : 1,
-            cursor: loading ? "not-allowed" : "pointer",
-          }}
-        >
-          {loading ? "Updating..." : "Update Password"}
-        </button>
-      </form>
-    </SectionCard>
+          <Button type="submit" disabled={loading} size="sm" className="w-fit">
+            {loading ? "Updating..." : "Update Password"}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -185,77 +129,61 @@ function DeleteAccountSection({ userId, onDeleted }: { userId: number; onDeleted
   }
 
   return (
-    <SectionCard title="Delete Account">
-      <p
-        className="text-[14px] mb-4"
-        style={{ color: "var(--secondary-color)" }}
-      >
-        Permanently delete your account and all your data. This cannot be undone.
-      </p>
+    <Card className="mb-6">
+      <CardHeader>
+        <CardTitle>Delete Account</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-[14px] mb-4" style={{ color: "var(--secondary-color)" }}>
+          Permanently delete your account and all your data. This cannot be undone.
+        </p>
 
-      {!confirm ? (
-        <button
-          type="button"
-          onClick={() => setConfirm(true)}
-          className="rounded-lg px-6 py-2 text-[15px] font-medium"
-          style={{
-            backgroundColor: "#ef4444",
-            color: "#fff",
-            cursor: "pointer",
-          }}
-        >
-          Delete My Account
-        </button>
-      ) : (
-        <form onSubmit={handleDelete}>
-          <p
-            className="text-[14px] font-medium mb-3"
-            style={{ color: "#ef4444" }}
+        {!confirm ? (
+          <Button
+            type="button"
+            variant="pink"
+            size="sm"
+            onClick={() => setConfirm(true)}
+            className="w-fit"
           >
-            Enter your password to confirm deletion:
-          </p>
-          <Field
-            label="Password"
-            type="password"
-            value={password}
-            onChange={setPassword}
-            placeholder="Enter your password"
-          />
-          {error && (
-            <p className="text-[14px] mb-4" style={{ color: "#ef4444" }}>
-              {error}
+            Delete My Account
+          </Button>
+        ) : (
+          <form onSubmit={handleDelete} className="flex flex-col gap-4">
+            <p className="text-[14px] font-medium" style={{ color: "#ef4444" }}>
+              Enter your password to confirm deletion:
             </p>
-          )}
-          <div className="flex gap-3">
-            <button
-              type="submit"
-              disabled={loading}
-              className="rounded-lg px-6 py-2 text-[15px] font-medium"
-              style={{
-                backgroundColor: "#ef4444",
-                color: "#fff",
-                opacity: loading ? 0.6 : 1,
-                cursor: loading ? "not-allowed" : "pointer",
-              }}
-            >
-              {loading ? "Deleting..." : "Confirm Delete"}
-            </button>
-            <button
-              type="button"
-              onClick={() => { setConfirm(false); setPassword(""); setError(null); }}
-              className="rounded-lg px-6 py-2 text-[15px] font-medium"
-              style={{
-                backgroundColor: "var(--border-light)",
-                color: "var(--body-color)",
-                cursor: "pointer",
-              }}
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-      )}
-    </SectionCard>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="delete-password">Password</Label>
+              <Input
+                id="delete-password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+              />
+            </div>
+            {error && (
+              <p className="text-[14px]" style={{ color: "#ef4444" }}>{error}</p>
+            )}
+            <div className="flex gap-3">
+              <Button type="submit" variant="pink" size="sm" disabled={loading} className="w-fit">
+                {loading ? "Deleting..." : "Confirm Delete"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => { setConfirm(false); setPassword(""); setError(null); }}
+                className="w-fit"
+              >
+                Cancel
+              </Button>
+            </div>
+          </form>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -271,6 +199,11 @@ function SettingsContent() {
     router.push("/");
   }
 
+  async function handleLogout() {
+    await signOut();
+    router.push("/login");
+  }
+
   return (
     <div
       className="min-h-screen"
@@ -280,7 +213,7 @@ function SettingsContent() {
       }}
     >
       <AppHeader />
-      <main className="px-6 py-8 md:px-[80px] md:py-[48px] max-w-[700px]">
+      <main className="px-6 py-8 md:px-[80px] md:py-[48px] max-w-[700px] mx-auto w-full">
         <h1
           className="text-[28px] md:text-[32px] font-bold mb-8"
           style={{ color: "var(--heading-color)" }}
@@ -289,19 +222,39 @@ function SettingsContent() {
         </h1>
 
         {/* User info */}
-        <SectionCard title="Your Account">
-          <p style={{ color: "var(--body-color)" }}>
-            <span style={{ color: "var(--secondary-color)" }}>Username: </span>
-            {user?.username}
-          </p>
-          <p className="mt-2" style={{ color: "var(--body-color)" }}>
-            <span style={{ color: "var(--secondary-color)" }}>Email: </span>
-            {user?.email}
-          </p>
-        </SectionCard>
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Your Account</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-2">
+            <p style={{ color: "var(--body-color)" }}>
+              <span style={{ color: "var(--secondary-color)" }}>Username: </span>
+              {user?.username}
+            </p>
+            <p style={{ color: "var(--body-color)" }}>
+              <span style={{ color: "var(--secondary-color)" }}>Email: </span>
+              {user?.email}
+            </p>
+          </CardContent>
+        </Card>
 
         {user && <ChangePasswordSection userId={user.id} />}
         {user && <DeleteAccountSection userId={user.id} onDeleted={handleDeleted} />}
+
+        {/* Sign out */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Sign Out</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-[14px] mb-4" style={{ color: "var(--secondary-color)" }}>
+              Sign out of your account on this device.
+            </p>
+            <Button variant="outline" size="sm" onClick={handleLogout} className="w-fit">
+              Logout
+            </Button>
+          </CardContent>
+        </Card>
       </main>
     </div>
   );
