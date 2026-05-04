@@ -19,7 +19,7 @@ const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>
       }}
       ref={ref}
       onFocus={(e) => {
-        e.target.style.borderColor = "#b2def9";
+        e.target.style.borderColor = "var(--color-blue)";
         e.target.style.backgroundColor = "var(--input-focus-bg)";
       }}
       onBlur={(e) => {

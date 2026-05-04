@@ -7,6 +7,11 @@ import AppHeader from "@/components/AppHeader";
 import GoogleButton from "@/components/GoogleButton";
 import { login as loginApi } from "@/services/api";
 import { useAuth, PublicOnlyRoute } from "@/contexts/AuthContext";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Eye, EyeOff } from "lucide-react";
 
 function LoginContent() {
   const router = useRouter();
@@ -15,6 +20,7 @@ function LoginContent() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -40,14 +46,7 @@ function LoginContent() {
       <AppHeader links={[{ label: "Create Account", href: "/create-account" }]} />
 
       <main className="flex-1 w-full flex items-center justify-center p-[24px] md:p-[40px]">
-        <div
-          className="w-full max-w-[520px] rounded-[32px] md:rounded-[40px] p-[32px] md:p-[56px] shadow-sm flex flex-col gap-[28px] md:gap-[40px] relative overflow-hidden"
-          style={{
-            backgroundColor: "var(--card-bg)",
-            border: "1px solid var(--border-light)",
-            transition: "background-color 0.3s, border-color 0.3s",
-          }}
-        >
+        <Card className="w-full max-w-[520px] md:rounded-[40px] p-[32px] md:p-[56px] flex flex-col gap-[28px] md:gap-[40px]">
           <div className="absolute top-0 left-0 w-full h-[8px] flex">
             <div className="flex-1 bg-[#f9b2d7]" />
             <div className="flex-1 bg-[#b2def9]" />
@@ -73,86 +72,61 @@ function LoginContent() {
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-[24px] md:gap-[28px]">
             <div className="flex flex-col gap-[10px]">
-              <label
-                htmlFor="email"
-                className="font-semibold text-[16px] ml-1"
-                style={{ color: "var(--secondary-color)" }}
-              >
+              <Label htmlFor="email" className="text-[16px]">
                 Email
-              </label>
-              <input
+              </Label>
+              <Input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
                 required
-                className="w-full h-[60px] rounded-[20px] px-[20px] text-[16px] focus:ring-4 focus:ring-[#b2def9]/10 focus:outline-none transition-all"
-                style={{
-                  backgroundColor: "var(--input-bg)",
-                  border: "1px solid var(--border-color)",
-                  color: "var(--body-color)",
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = "#b2def9";
-                  e.target.style.backgroundColor = "var(--input-focus-bg)";
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = "var(--border-color)";
-                  e.target.style.backgroundColor = "var(--input-bg)";
-                }}
               />
             </div>
 
             <div className="flex flex-col gap-[10px]">
               <div className="flex justify-between items-center ml-1">
-                <label
-                  htmlFor="password"
-                  className="font-semibold text-[16px]"
-                  style={{ color: "var(--secondary-color)" }}
-                >
+                <Label htmlFor="password" className="text-[16px] ml-0">
                   Password
-                </label>
+                </Label>
                 <Link
                   href="/forgot-password"
                   className="text-[14px] font-medium text-[#b2def9] hover:text-[#f9b2d7]"
                 >
-                  Forgot?
+                  Forgot Password?
                 </Link>
               </div>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                className="w-full h-[60px] rounded-[20px] px-[20px] text-[16px] focus:ring-4 focus:ring-[#b2def9]/10 focus:outline-none transition-all"
-                style={{
-                  backgroundColor: "var(--input-bg)",
-                  border: "1px solid var(--border-color)",
-                  color: "var(--body-color)",
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = "#b2def9";
-                  e.target.style.backgroundColor = "var(--input-focus-bg)";
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = "var(--border-color)";
-                  e.target.style.backgroundColor = "var(--input-bg)";
-                }}
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Must have at least 8 characters"
+                  required
+                  className="pr-12"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
 
-            <button
+            <Button
               type="submit"
               disabled={loading}
-              className="bg-[#f9b2d7] rounded-[20px] shadow-[0px_10px_25px_rgba(249,178,215,0.4)] flex items-center justify-center w-full h-[64px] mt-[4px] hover:-translate-y-0.5 hover:shadow-[0px_12px_30px_rgba(249,178,215,0.5)] transition-all disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none cursor-pointer border-none"
+              variant="pink"
+              size="lg"
+              className="w-full mt-[4px] hover:-translate-y-0.5 hover:shadow-[0px_12px_30px_rgba(249,178,215,0.5)] disabled:transform-none"
             >
-              <span className="font-bold text-[20px] text-white tracking-wide">
-                {loading ? "Signing in…" : "Sign In"}
-              </span>
-            </button>
+              {loading ? "Signing in…" : "Sign In"}
+            </Button>
           </form>
 
           <div className="flex items-center gap-[20px] w-full px-4">
@@ -180,7 +154,7 @@ function LoginContent() {
               Create Account
             </Link>
           </p>
-        </div>
+        </Card>
       </main>
     </div>
   );
