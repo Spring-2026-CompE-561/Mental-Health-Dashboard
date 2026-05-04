@@ -302,7 +302,7 @@ function JournalsContent() {
       className="flex flex-col relative w-full min-h-screen"
       style={{ backgroundColor: "var(--page-bg)", transition: "background-color 0.3s" }}
     >
-      <AppHeader title="Mental Health" />
+      <AppHeader title="Mental Health Dashboard" />
 
       <main className="flex-1 w-full max-w-[1200px] mx-auto p-[32px] md:p-[64px] flex flex-col gap-[32px] md:gap-[48px]">
         <div className="flex w-full items-center justify-between gap-4 flex-wrap">
