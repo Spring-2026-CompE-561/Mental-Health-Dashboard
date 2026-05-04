@@ -464,6 +464,13 @@ function DashboardContent() {
 
   const recentJournals = journals.slice(0, 3);
   const displayName = user?.username || "there";
+  const todayScore = useMemo(() => {
+    const todayKey = toISODate(new Date());
+    // questionnaires are fetched for the current period; find today's entry
+    const todayEntry = questionnaires.find((q) => q.created_at === todayKey);
+    return todayEntry?.score ?? null;
+  }, [questionnaires]);
+
 
   const [isReturning] = useState(() => {
     if (typeof window === "undefined") return false;
@@ -521,6 +528,68 @@ function DashboardContent() {
             {error}
           </div>
         )}
+                {/* Today's score card */}
+        <div
+          className="flex items-center gap-[24px] rounded-[24px] px-[28px] py-[20px] shadow-sm flex-wrap"
+          style={{
+            backgroundColor: "var(--card-bg)",
+            border: "1px solid var(--border-light)",
+            transition: "background-color 0.3s, border-color 0.3s",
+          }}
+        >
+          <div className="flex flex-col gap-[4px] flex-1 min-w-[120px]">
+            <span
+              className="font-semibold text-[13px] uppercase tracking-widest"
+              style={{ color: "var(--muted-color)" }}
+            >
+              Today&apos;s Score
+            </span>
+            {loadingChart ? (
+              <span className="text-[36px] font-bold" style={{ color: "var(--muted-color)" }}>—</span>
+            ) : todayScore !== null ? (
+              <span className="text-[36px] font-bold leading-none" style={{ color: "var(--heading-color)" }}>
+                {todayScore.toFixed(1)}
+                <span className="text-[18px] font-medium ml-1" style={{ color: "var(--muted-color)" }}>/100</span>
+              </span>
+            ) : (
+              <span className="text-[36px] font-bold" style={{ color: "var(--placeholder-color)" }}>—</span>
+            )}
+            <span className="text-[13px]" style={{ color: "var(--secondary-color)" }}>
+              {todayScore !== null
+                ? todayScore >= 70
+                  ? "You're doing great today 🌟"
+                  : todayScore >= 40
+                  ? "Hang in there, you've got this 💙"
+                  : "Tough day — be kind to yourself 🌿"
+                : "Log your mood to see your score"}
+            </span>
+          </div>
+
+          {/* Score ring */}
+          {todayScore !== null && (
+            <div className="relative shrink-0 w-[80px] h-[80px]">
+              <svg viewBox="0 0 80 80" className="w-full h-full -rotate-90">
+                <circle cx="40" cy="40" r="32" fill="none" stroke="var(--grid-line)" strokeWidth="8" />
+                <circle
+                  cx="40" cy="40" r="32"
+                  fill="none"
+                  stroke={todayScore >= 70 ? "#b2f9c8" : todayScore >= 40 ? "#b2def9" : "#f9b2d7"}
+                  strokeWidth="8"
+                  strokeLinecap="round"
+                  strokeDasharray={`${(todayScore / 100) * 201} 201`}
+                />
+              </svg>
+              <span
+                className="absolute inset-0 flex items-center justify-center text-[15px] font-bold"
+                style={{ color: "var(--heading-color)" }}
+              >
+                {Math.round(todayScore)}
+              </span>
+            </div>
+          )}
+        </div>
+
+
 
         {/* 3 metric charts */}
         <div className="flex flex-col gap-[20px]">
