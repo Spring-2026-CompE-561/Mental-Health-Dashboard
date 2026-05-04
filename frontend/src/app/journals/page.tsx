@@ -10,6 +10,8 @@ import {
   updateJournal,
 } from "@/services/api";
 import type { Journal } from "@/types";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 const STRIPE_COLORS = ["#f9b2d7", "#b2def9", "#b2f9c8", "#f9f0b2"];
 
@@ -114,13 +116,8 @@ function JournalModal({ open, mode, initialBody, onClose, onSave, saving }: Jour
       style={{ backgroundColor: "var(--overlay-bg)" }}
       onClick={onClose}
     >
-      <div
-        className="w-full max-w-[640px] rounded-[24px] p-[32px] md:p-[40px] flex flex-col gap-[24px] relative overflow-hidden max-h-[90vh]"
-        style={{
-          backgroundColor: "var(--card-bg)",
-          boxShadow: "var(--shadow-card)",
-          transition: "background-color 0.3s",
-        }}
+      <Card
+        className="w-full max-w-[640px] rounded-[24px] p-[32px] md:p-[40px] flex flex-col gap-[24px] max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="absolute top-0 left-0 w-full h-[6px] flex">
@@ -182,29 +179,27 @@ function JournalModal({ open, mode, initialBody, onClose, onSave, saving }: Jour
         </p>
 
         <div className="flex items-center justify-end gap-[12px]">
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={onClose}
             disabled={saving}
-            className="font-semibold text-[16px] px-6 py-3 bg-transparent border-none cursor-pointer disabled:opacity-60 transition-colors"
             style={{ color: "var(--secondary-color)" }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "var(--heading-color)")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--secondary-color)")}
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="default"
+            size="sm"
             onClick={() => onSave(body)}
             disabled={saving || !body.trim()}
-            className="bg-[#b2def9] rounded-[16px] flex items-center justify-center px-[32px] h-[48px] hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed border-none cursor-pointer shadow-[0px_4px_16px_rgba(178,222,249,0.4)]"
+            className="px-[32px] h-[48px]"
           >
-            <span className="font-semibold text-[16px] text-white tracking-wide">
-              {saving ? "Saving…" : "Save"}
-            </span>
-          </button>
+            {saving ? "Saving…" : "Save"}
+          </Button>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }
@@ -298,13 +293,9 @@ function JournalsContent() {
           >
             My Journal Entries
           </h1>
-          <button
-            type="button"
-            onClick={openCreate}
-            className="bg-[#f9b2d7] rounded-[16px] shadow-[0px_8px_24px_rgba(249,178,215,0.4)] flex items-center justify-center px-[32px] h-[56px] hover:opacity-90 transition-opacity border-none cursor-pointer"
-          >
-            <span className="font-semibold text-[18px] text-white tracking-wide">+ New Entry</span>
-          </button>
+          <Button variant="pink" onClick={openCreate}>
+            + New Entry
+          </Button>
         </div>
 
         <div
@@ -353,13 +344,9 @@ function JournalsContent() {
                 : "No entries match your search."}
             </p>
             {journals.length === 0 && (
-              <button
-                type="button"
-                onClick={openCreate}
-                className="bg-[#b2def9] text-white font-semibold px-6 py-3 rounded-2xl hover:opacity-90 transition-opacity border-none cursor-pointer"
-              >
+              <Button variant="default" onClick={openCreate}>
                 Write your first entry
-              </button>
+              </Button>
             )}
           </div>
         ) : (

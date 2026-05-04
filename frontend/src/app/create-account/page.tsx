@@ -7,6 +7,10 @@ import AppHeader from "@/components/AppHeader";
 import GoogleButton from "@/components/GoogleButton";
 import { createAccount, login as loginApi } from "@/services/api";
 import { useAuth, PublicOnlyRoute } from "@/contexts/AuthContext";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 
 interface FieldProps {
   id: string;
@@ -21,34 +25,16 @@ interface FieldProps {
 function Field({ id, label, type = "text", value, onChange, placeholder, required = true }: FieldProps) {
   return (
     <div className="flex flex-col gap-2">
-      <label
-        htmlFor={id}
-        className="font-bold text-[13px] md:text-[14px] ml-1"
-        style={{ color: "var(--secondary-color)" }}
-      >
+      <Label htmlFor={id} className="font-bold text-[13px] md:text-[14px]">
         {label}
-      </label>
-      <input
+      </Label>
+      <Input
         id={id}
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         required={required}
-        className="w-full h-[52px] md:h-[56px] rounded-2xl focus:ring-4 focus:ring-[#b2def9]/10 focus:outline-none px-5 text-[14px] md:text-[15px] transition-all"
-        style={{
-          backgroundColor: "var(--input-bg)",
-          border: "1px solid var(--border-light)",
-          color: "var(--body-color)",
-        }}
-        onFocus={(e) => {
-          e.target.style.borderColor = "#b2def9";
-          e.target.style.backgroundColor = "var(--input-focus-bg)";
-        }}
-        onBlur={(e) => {
-          e.target.style.borderColor = "var(--border-light)";
-          e.target.style.backgroundColor = "var(--input-bg)";
-        }}
       />
     </div>
   );
@@ -106,15 +92,8 @@ function CreateAccountContent() {
     >
       <AppHeader links={[{ label: "Login", href: "/login" }]} />
 
-      <main className="flex-1 w-full flex items-start md:items-center justify-center px-4 md:px-0 pb-10">
-        <div
-          className="w-full max-w-[400px] md:max-w-[480px] rounded-[28px] md:rounded-[32px] p-6 md:p-12 shadow-sm flex flex-col gap-6 md:gap-[28px] relative overflow-hidden"
-          style={{
-            backgroundColor: "var(--card-bg)",
-            border: "1px solid var(--border-light)",
-            transition: "background-color 0.3s, border-color 0.3s",
-          }}
-        >
+      <main className="flex-1 w-full flex items-start md:items-center justify-center px-4 md:px-0 pt-6 pb-10">
+        <Card className="w-full max-w-[400px] md:max-w-[480px] md:rounded-[32px] p-6 md:p-12 flex flex-col gap-6 md:gap-[28px]">
           <div className="absolute top-0 left-0 w-full h-[6px] flex">
             <div className="flex-1 bg-[#f9b2d7]" />
             <div className="flex-1 bg-[#b2def9]" />
@@ -141,18 +120,18 @@ function CreateAccountContent() {
           <form onSubmit={handleSubmit} className="flex flex-col gap-4 md:gap-5">
             <Field id="username" label="Username" value={username} onChange={setUsername} placeholder="Choose a username" />
             <Field id="email" label="Email" type="email" value={email} onChange={setEmail} placeholder="Enter your email" />
-            <Field id="password" label="Password" type="password" value={password} onChange={setPassword} placeholder="••••••••" />
-            <Field id="confirm-password" label="Confirm Password" type="password" value={confirmPassword} onChange={setConfirmPassword} placeholder="••••••••" />
+            <Field id="password" label="Password" type="password" value={password} onChange={setPassword} placeholder="Must have at least 8 characters" />
+            <Field id="confirm-password" label="Confirm Password" type="password" value={confirmPassword} onChange={setConfirmPassword} placeholder="Re-enter your password" />
 
-            <button
+            <Button
               type="submit"
               disabled={loading}
-              className="bg-[#b2def9] rounded-2xl shadow-md flex items-center justify-center w-full h-[56px] md:h-[60px] mt-2 hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed border-none cursor-pointer"
+              variant="default"
+              size="lg"
+              className="w-full mt-2 active:scale-[0.98]"
             >
-              <span className="font-bold text-[18px] md:text-[20px] text-white tracking-wide">
-                {loading ? "Creating account…" : "Create Account"}
-              </span>
-            </button>
+              {loading ? "Creating account…" : "Create Account"}
+            </Button>
           </form>
 
           <div className="flex items-center gap-4 w-full">
@@ -169,7 +148,7 @@ function CreateAccountContent() {
               Login
             </Link>
           </p>
-        </div>
+        </Card>
       </main>
     </div>
   );

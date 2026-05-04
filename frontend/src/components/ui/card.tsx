@@ -2,7 +2,7 @@ import { forwardRef, type HTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
 const Card = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(function Card(
-  { className, ...props },
+  { className, style, ...props },
   ref
 ) {
   return (
@@ -13,6 +13,7 @@ const Card = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(function
         backgroundColor: "var(--card-bg)",
         border: "1px solid var(--border-light)",
         transition: "background-color 0.3s, border-color 0.3s",
+        ...style,
       }}
       {...props}
     />

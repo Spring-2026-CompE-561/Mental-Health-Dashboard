@@ -7,6 +7,8 @@ import AppHeader from "@/components/AppHeader";
 import { useAuth, ProtectedRoute } from "@/contexts/AuthContext";
 import { getJournals, getQuestionnaires } from "@/services/api";
 import type { Journal, Questionnaire } from "@/types";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 const STRIPE_COLORS = ["#f9b2d7", "#b2def9", "#b2f9c8", "#f9f0b2"];
 
@@ -497,27 +499,14 @@ function DashboardContent() {
             {isReturning ? "Welcome back, " : "Welcome, "}<span className="text-[#b2def9]">{displayName}</span>!
           </h1>
 
-          <div
-            className="flex items-center gap-[16px] md:gap-[24px] rounded-[24px] px-[24px] md:px-[32px] py-[16px] md:py-[20px] shadow-sm"
-            style={{
-              backgroundColor: "var(--card-bg)",
-              border: "1px solid var(--border-light)",
-              transition: "background-color 0.3s, border-color 0.3s",
-            }}
-          >
+          <Card className="flex items-center gap-[16px] md:gap-[24px] rounded-[24px] px-[24px] md:px-[32px] py-[16px] md:py-[20px]">
             <p className="font-normal text-[16px] md:text-[18px] m-0" style={{ color: "var(--secondary-color)" }}>
               How are you feeling today?
             </p>
-            <button
-              type="button"
-              onClick={() => router.push("/questionnaire")}
-              className="bg-[#b2def9] rounded-[16px] shadow-[0px_4px_16px_rgba(178,222,249,0.4)] flex items-center justify-center px-[24px] h-[48px] hover:opacity-90 transition-opacity border-none cursor-pointer"
-            >
-              <span className="font-semibold text-[15px] text-white tracking-wide">
-                Log your mood
-              </span>
-            </button>
-          </div>
+            <Button size="sm" onClick={() => router.push("/questionnaire")}>
+              Log your mood
+            </Button>
+          </Card>
         </div>
 
         {error && (
@@ -529,14 +518,7 @@ function DashboardContent() {
           </div>
         )}
                 {/* Today's score card */}
-        <div
-          className="flex items-center gap-[24px] rounded-[24px] px-[28px] py-[20px] shadow-sm flex-wrap"
-          style={{
-            backgroundColor: "var(--card-bg)",
-            border: "1px solid var(--border-light)",
-            transition: "background-color 0.3s, border-color 0.3s",
-          }}
-        >
+        <Card className="flex items-center gap-[24px] rounded-[24px] px-[28px] py-[20px] flex-wrap">
           <div className="flex flex-col gap-[4px] flex-1 min-w-[120px]">
             <span
               className="font-semibold text-[13px] uppercase tracking-widest"
@@ -587,9 +569,7 @@ function DashboardContent() {
               </span>
             </div>
           )}
-        </div>
-
-
+        </Card>
 
         {/* 3 metric charts */}
         <div className="flex flex-col gap-[20px]">
@@ -621,14 +601,9 @@ function DashboardContent() {
 
           <div className="grid grid-cols-1 gap-[20px]">
             {metricCharts.map(({ field, label, color, gradientId, emptyMsg, chart }) => (
-              <div
+              <Card
                 key={field}
-                className="rounded-[24px] p-[20px] md:p-[28px] shadow-sm flex flex-col gap-[12px] min-h-[280px]"
-                style={{
-                  backgroundColor: "var(--card-bg)",
-                  border: "1px solid var(--border-light)",
-                  transition: "background-color 0.3s, border-color 0.3s",
-                }}
+                className="rounded-[24px] p-[20px] md:p-[28px] flex flex-col gap-[12px] min-h-[280px]"
               >
                 <div className="flex items-center gap-2">
                   <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }} />
@@ -649,20 +624,13 @@ function DashboardContent() {
                     emptyMessage={emptyMsg}
                   />
                 )}
-              </div>
+              </Card>
             ))}
           </div>
         </div>
 
         {/* Recent journal entries */}
-        <div
-          className="flex flex-col rounded-[32px] p-[28px] md:p-[40px] shadow-sm"
-          style={{
-            backgroundColor: "var(--card-bg)",
-            border: "1px solid var(--border-light)",
-            transition: "background-color 0.3s, border-color 0.3s",
-          }}
-        >
+        <Card className="flex flex-col p-[28px] md:p-[40px]">
           <h2
             className="font-semibold text-[20px] md:text-[22px] tracking-tight mb-[24px] md:mb-[32px]"
             style={{ color: "var(--body-color)" }}
@@ -728,7 +696,7 @@ function DashboardContent() {
               View All Journals
             </Link>
           </div>
-        </div>
+        </Card>
       </main>
     </div>
   );

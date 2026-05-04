@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import AppHeader from "@/components/AppHeader";
 import { ProtectedRoute } from "@/contexts/AuthContext";
 import { createQuestionnaire, getTodaysQuestionnaire } from "@/services/api";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 type ScoreKey = "mood" | "depression" | "anxiety";
 
@@ -102,14 +104,7 @@ function QuestionnaireContent() {
       <AppHeader />
 
       <main className="flex-1 w-full flex items-center justify-center p-[24px] md:p-[40px]">
-        <div
-          className="w-full max-w-[800px] rounded-[32px] p-[32px] md:p-[64px] shadow-sm flex flex-col gap-[32px] md:gap-[48px] relative overflow-hidden"
-          style={{
-            backgroundColor: "var(--card-bg)",
-            border: "1px solid var(--border-light)",
-            transition: "background-color 0.3s, border-color 0.3s",
-          }}
-        >
+        <Card className="w-full max-w-[800px] p-[32px] md:p-[64px] flex flex-col gap-[32px] md:gap-[48px]">
           <div className="absolute top-0 left-0 w-full h-[6px] flex">
             <div className="flex-1 bg-[#f9b2d7]" />
             <div className="flex-1 bg-[#b2def9]" />
@@ -219,18 +214,17 @@ function QuestionnaireContent() {
           </div>
 
           <div className="flex justify-center mt-[16px]">
-            <button
+            <Button
               type="button"
+              size="lg"
               onClick={handleSubmit}
               disabled={loading || initializing}
-              className="bg-[#b2def9] rounded-[16px] shadow-[0px_8px_24px_rgba(178,222,249,0.4)] flex items-center justify-center px-[48px] h-[64px] hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed border-none cursor-pointer"
+              className="px-[48px]"
             >
-              <span className="font-semibold text-[22px] text-white tracking-wide">
-                {submitLabel}
-              </span>
-            </button>
+              {submitLabel}
+            </Button>
           </div>
-        </div>
+        </Card>
       </main>
     </div>
   );

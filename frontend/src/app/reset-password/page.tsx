@@ -5,6 +5,10 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import AppHeader from "@/components/AppHeader";
 import { resetPassword } from "@/services/api";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 
 function ResetPasswordForm() {
   const router = useRouter();
@@ -53,26 +57,17 @@ function ResetPasswordForm() {
       >
         <AppHeader links={[{ label: "Login", href: "/login" }]} />
         <main className="flex-1 w-full flex items-center justify-center p-[40px]">
-          <div
-            className="w-full max-w-[480px] rounded-[32px] p-[48px] shadow-sm text-center"
-            style={{
-              backgroundColor: "var(--card-bg)",
-              border: "1px solid var(--border-light)",
-            }}
-          >
-            <h1 className="font-semibold text-[28px] mb-4" style={{ color: "var(--heading-color)" }}>
+          <Card className="w-full max-w-[480px] p-[48px] flex flex-col gap-4 items-center text-center">
+            <h1 className="font-semibold text-[28px]" style={{ color: "var(--heading-color)" }}>
               Invalid reset link
             </h1>
-            <p className="mb-6" style={{ color: "var(--secondary-color)" }}>
+            <p style={{ color: "var(--secondary-color)" }}>
               This link is missing a reset token. Request a new one from the forgot-password page.
             </p>
-            <Link
-              href="/forgot-password"
-              className="inline-block bg-[#b2def9] text-white font-semibold px-6 py-3 rounded-2xl hover:opacity-90 transition-opacity"
-            >
-              Request new link
-            </Link>
-          </div>
+            <Button asChild variant="default">
+              <Link href="/forgot-password">Request new link</Link>
+            </Button>
+          </Card>
         </main>
       </div>
     );
@@ -86,14 +81,7 @@ function ResetPasswordForm() {
       <AppHeader links={[{ label: "Login", href: "/login" }]} />
 
       <main className="flex-1 w-full flex items-center justify-center p-[40px]">
-        <div
-          className="w-full max-w-[480px] rounded-[32px] p-[48px] shadow-sm flex flex-col gap-[32px] relative overflow-hidden"
-          style={{
-            backgroundColor: "var(--card-bg)",
-            border: "1px solid var(--border-light)",
-            transition: "background-color 0.3s, border-color 0.3s",
-          }}
-        >
+        <Card className="w-full max-w-[480px] p-[48px] flex flex-col gap-[32px]">
           <div className="absolute top-0 left-0 w-full h-[6px] flex">
             <div className="flex-1 bg-[#f9b2d7]" />
             <div className="flex-1 bg-[#b2def9]" />
@@ -135,81 +123,41 @@ function ResetPasswordForm() {
               )}
 
               <div className="flex flex-col gap-[8px]">
-                <label
-                  htmlFor="password"
-                  className="font-medium text-[14px]"
-                  style={{ color: "var(--secondary-color)" }}
-                >
-                  New password
-                </label>
-                <input
+                <Label htmlFor="password">New password</Label>
+                <Input
                   id="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder="Must be at least 8 characters"
                   required
-                  className="w-full h-[56px] rounded-[16px] focus:outline-none px-[20px] text-[16px] transition-colors"
-                  style={{
-                    backgroundColor: "var(--input-bg)",
-                    border: "1px solid var(--border-color)",
-                    color: "var(--body-color)",
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = "#b2def9";
-                    e.target.style.backgroundColor = "var(--input-focus-bg)";
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = "var(--border-color)";
-                    e.target.style.backgroundColor = "var(--input-bg)";
-                  }}
                 />
               </div>
 
               <div className="flex flex-col gap-[8px]">
-                <label
-                  htmlFor="confirm-password"
-                  className="font-medium text-[14px]"
-                  style={{ color: "var(--secondary-color)" }}
-                >
-                  Confirm new password
-                </label>
-                <input
+                <Label htmlFor="confirm-password">Confirm new password</Label>
+                <Input
                   id="confirm-password"
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder="Re-enter your new password"
                   required
-                  className="w-full h-[56px] rounded-[16px] focus:outline-none px-[20px] text-[16px] transition-colors"
-                  style={{
-                    backgroundColor: "var(--input-bg)",
-                    border: "1px solid var(--border-color)",
-                    color: "var(--body-color)",
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = "#b2def9";
-                    e.target.style.backgroundColor = "var(--input-focus-bg)";
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = "var(--border-color)";
-                    e.target.style.backgroundColor = "var(--input-bg)";
-                  }}
                 />
               </div>
 
-              <button
+              <Button
                 type="submit"
                 disabled={loading}
-                className="bg-[#b2def9] rounded-[16px] shadow-[0px_8px_24px_rgba(178,222,249,0.4)] flex items-center justify-center w-full h-[60px] mt-[8px] hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed border-none cursor-pointer"
+                variant="default"
+                size="lg"
+                className="w-full mt-[8px]"
               >
-                <span className="font-semibold text-[20px] text-white tracking-wide">
-                  {loading ? "Resetting…" : "Reset Password"}
-                </span>
-              </button>
+                {loading ? "Resetting…" : "Reset Password"}
+              </Button>
             </form>
           )}
-        </div>
+        </Card>
       </main>
     </div>
   );

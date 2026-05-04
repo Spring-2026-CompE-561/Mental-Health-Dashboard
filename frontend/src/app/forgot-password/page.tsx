@@ -4,6 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import AppHeader from "@/components/AppHeader";
 import { forgotPassword } from "@/services/api";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -33,14 +37,7 @@ export default function ForgotPasswordPage() {
       <AppHeader links={[{ label: "Register", href: "/create-account" }]} />
 
       <main className="flex-1 w-full flex items-center justify-center p-[40px]">
-        <div
-          className="w-full max-w-[480px] rounded-[32px] p-[48px] shadow-sm flex flex-col gap-[32px] relative overflow-hidden"
-          style={{
-            backgroundColor: "var(--card-bg)",
-            border: "1px solid var(--border-light)",
-            transition: "background-color 0.3s, border-color 0.3s",
-          }}
-        >
+        <Card className="w-full max-w-[480px] p-[48px] flex flex-col gap-[32px]">
           <div className="absolute top-0 left-0 w-full h-[6px] flex">
             <div className="flex-1 bg-[#f9b2d7]" />
             <div className="flex-1 bg-[#b2def9]" />
@@ -83,61 +80,39 @@ export default function ForgotPasswordPage() {
               )}
 
               <div className="flex flex-col gap-[8px]">
-                <label
-                  htmlFor="email"
-                  className="font-medium text-[14px]"
-                  style={{ color: "var(--secondary-color)" }}
-                >
-                  Email
-                </label>
-                <input
+                <Label htmlFor="email">Email</Label>
+                <Input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email"
                   required
-                  className="w-full h-[56px] rounded-[16px] focus:outline-none px-[20px] text-[16px] transition-colors"
-                  style={{
-                    backgroundColor: "var(--input-bg)",
-                    border: "1px solid var(--border-color)",
-                    color: "var(--body-color)",
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = "#b2def9";
-                    e.target.style.backgroundColor = "var(--input-focus-bg)";
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = "var(--border-color)";
-                    e.target.style.backgroundColor = "var(--input-bg)";
-                  }}
                 />
               </div>
 
-              <button
+              <Button
                 type="submit"
                 disabled={loading}
-                className="bg-[#b2def9] rounded-[16px] shadow-[0px_8px_24px_rgba(178,222,249,0.4)] flex items-center justify-center w-full h-[60px] mt-[8px] hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed border-none cursor-pointer"
+                variant="default"
+                size="lg"
+                className="w-full mt-[8px]"
               >
-                <span className="font-semibold text-[20px] text-white tracking-wide">
-                  {loading ? "Sending…" : "Send Reset Link"}
-                </span>
-              </button>
+                {loading ? "Sending…" : "Send Reset Link"}
+              </Button>
             </form>
           )}
 
           <div className="w-full flex justify-center">
             <Link
               href="/login"
-              className="font-medium text-[16px] transition-colors"
+              className="font-medium text-[16px] transition-colors hover:text-[#f9b2d7]"
               style={{ color: "var(--secondary-color)" }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "#f9b2d7")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--secondary-color)")}
             >
               Back to Login
             </Link>
           </div>
-        </div>
+        </Card>
       </main>
     </div>
   );
