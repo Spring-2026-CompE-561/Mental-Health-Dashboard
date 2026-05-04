@@ -126,7 +126,7 @@ function QuestionnaireContent() {
             </h1>
             {existedAtLoad && !initializing && (
               <p className="text-center text-[14px] mt-2" style={{ color: "var(--muted-color)" }}>
-                You've already logged today — adjust the sliders to update your entry.
+                You&apos;ve already logged today — adjust the sliders to update your entry.
               </p>
             )}
           </div>

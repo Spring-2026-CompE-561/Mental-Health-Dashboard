@@ -5,7 +5,6 @@ writing journals, submitting mood scores, and verifying that the API
 returns properly formatted data for the frontend.
 """
 
-import pytest
 
 
 class TestUserRegistrationFlow:

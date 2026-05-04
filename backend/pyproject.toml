@@ -2,30 +2,30 @@
 name = "mental-health-dashboard"
 version = "0.1.0"
 description = "A full-stack dashboard for tracking mental health metrics."
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
-    "fastapi>=0.115.0",
-    "uvicorn>=0.30.0",
-    "pyyaml",
+    "fastapi>=0.136.1,<0.137.0",
+    "uvicorn[standard]>=0.34.0",
     "pydantic[email]>=2.12.5",
+    "pydantic-settings>=2.9.0",
     "sqlalchemy>=2.0.46",
-    "alembic>=1.13.0",
-    "bcrypt>=4.0.0",
+    "alembic>=1.15.0",
+    "bcrypt>=4.3.0",
     "python-jose[cryptography]>=3.3.0",
-    "pydantic-settings>=2.0.0",
     "python-dotenv>=1.0.0",
-    "httpx>=0.27.0",
+    "httpx>=0.28.0",
     "psycopg2-binary>=2.9.0",
-    "pytest-cov>=6.0.0",
+    "google-auth>=2.40.0",
+    "google-auth-oauthlib>=1.2.0",
 ]
 
 [dependency-groups]
 dev = [
     "pre-commit>=4.0.0",
     "ruff>=0.9.0",
-    "pytest>=8.0.0",
+    "pytest>=8.3.0",
     "pytest-cov>=6.0.0",
-    "httpx>=0.27.0",
+    "httpx>=0.28.0",
 ]
 
 [project.scripts]
@@ -57,3 +57,11 @@ extend-ignore = ["B008"]
 testpaths = ["tests"]
 pythonpath = ["src"]
 addopts = "-v --tb=short"
+
+[tool.coverage.run]
+source = ["src/app"]
+omit = [
+    "*/tests/*",
+    "*/__pycache__/*",
+    "*/alembic/*",
+]

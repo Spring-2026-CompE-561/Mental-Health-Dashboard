@@ -1,10 +1,8 @@
 # Backend
 
-FastAPI REST API handling authentication, journal entries with NLP sentiment analysis, and daily mood questionnaires.
+FastAPI REST API for authentication, journal entries, and daily mood questionnaires. Backed by PostgreSQL.
 
 ## Architecture
-
-
 
 | Layer | Directory | Responsibility |
 |---|---|---|
@@ -14,3 +12,13 @@ FastAPI REST API handling authentication, journal entries with NLP sentiment ana
 | Models | `src/app/models/` | SQLAlchemy ORM table definitions |
 | Schemas | `src/app/schemas/` | Pydantic request/response validation |
 | Core | `src/app/core/` | Auth, database session, settings, dependency injection |
+| Migrations | `alembic/versions/` | Alembic-managed schema migrations |
+
+## Quickstart
+
+```bash
+uv sync
+uv run alembic upgrade head
+uv run dev                # http://127.0.0.1:8000
+uv run pytest --cov=app   # tests + coverage
+```
