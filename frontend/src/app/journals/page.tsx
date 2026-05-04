@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import AppHeader from "@/components/AppHeader";
 import { ProtectedRoute } from "@/contexts/AuthContext";
 import {
@@ -12,6 +13,16 @@ import {
 import type { Journal } from "@/types";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const STRIPE_COLORS = ["#f9b2d7", "#b2def9", "#b2f9c8", "#f9f0b2"];
 
@@ -214,20 +225,19 @@ interface ModalState {
 function JournalsContent() {
   const [journals, setJournals] = useState<Journal[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [modal, setModal] = useState<ModalState>({ open: false, mode: "create", id: null, body: "" });
   const [saving, setSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Journal | null>(null);
 
   async function refresh() {
     setLoading(true);
-    setError("");
     try {
       const data = await getJournals();
       data.sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
       setJournals(data);
     } catch {
-      setError("Could not load journal entries.");
+      toast.error("Could not load journal entries.");
     } finally {
       setLoading(false);
     }
@@ -248,29 +258,38 @@ function JournalsContent() {
   }
 
   async function handleSave(body: string) {
+    const isEdit = modal.mode === "edit";
     setSaving(true);
     try {
-      if (modal.mode === "edit" && modal.id !== null) {
+      if (isEdit && modal.id !== null) {
         await updateJournal(modal.id, { body });
       } else {
         await createJournal({ body });
       }
       closeModal();
       await refresh();
+      toast.success(isEdit ? "Entry updated" : "Entry saved");
     } catch {
-      setError("Could not save. Try again.");
+      toast.error("Could not save. Try again.");
     } finally {
       setSaving(false);
     }
   }
 
-  async function handleDelete(entry: Journal) {
-    if (!confirm("Delete this journal entry? This cannot be undone.")) return;
+  function handleDelete(entry: Journal) {
+    setDeleteTarget(entry);
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget) return;
     try {
-      await deleteJournal(entry.id);
+      await deleteJournal(deleteTarget.id);
+      setDeleteTarget(null);
       await refresh();
+      toast.success("Entry deleted");
     } catch {
-      setError("Could not delete entry.");
+      toast.error("Could not delete entry.");
+      setDeleteTarget(null);
     }
   }
 
@@ -318,15 +337,6 @@ function JournalsContent() {
             style={{ color: "var(--body-color)" }}
           />
         </div>
-
-        {error && (
-          <div
-            className="px-4 py-3 rounded-xl text-sm"
-            style={{ backgroundColor: "var(--error-bg)", color: "var(--error-color)" }}
-          >
-            {error}
-          </div>
-        )}
 
         {loading ? (
           <p className="text-center py-12" style={{ color: "var(--muted-color)" }}>Loading entries…</p>
@@ -420,6 +430,22 @@ function JournalsContent() {
         onSave={handleSave}
         saving={saving}
       />
+
+      <AlertDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this entry?</AlertDialogTitle>
+            <AlertDialogDescription>This cannot be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
