@@ -9,11 +9,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY pyproject.toml ./
 COPY src/ ./src/
+COPY alembic.ini ./
+COPY alembic/ ./alembic/
 
 RUN pip install --no-cache-dir .
-
-# download the VADER sentiment lexicon so it is available at runtime
-RUN python -c "import nltk; nltk.download('vader_lexicon', quiet=True)"
 
 EXPOSE 8000
 

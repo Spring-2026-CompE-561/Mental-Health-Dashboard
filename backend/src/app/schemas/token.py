@@ -1,6 +1,5 @@
 """Pydantic schemas for JWT token responses."""
 
-from typing import Optional
 
 from pydantic import BaseModel
 
@@ -11,4 +10,4 @@ class Token(BaseModel):
 
 
 class TokenData(BaseModel):
-    user_id: Optional[int] = None
+    user_id: int | None = None

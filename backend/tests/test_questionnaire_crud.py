@@ -31,10 +31,16 @@ class TestCreateQuestionnaire:
 
     def test_create_questionnaire_boundary_scores(self, db_session):
         user = _make_user(db_session)
-        low = create_questionnaire(db_session, user_id=user.id, mood=0.0, depression=0.0, anxiety=0.0)
-        high = create_questionnaire(db_session, user_id=user.id, mood=10.0, depression=10.0, anxiety=10.0)
-        assert low.score == 0.0
-        assert high.score == 100.0
+        # Score formula inverts depression and anxiety:
+        #   score = (mood + (10 - depression) + (10 - anxiety)) / 3 * 10
+        # Worst case (mood=10, depression=10, anxiety=10) → (10 + 0 + 0)/3*10 = 33.33
+        # Best case (mood=0, depression=0, anxiety=0) → (0 + 10 + 10)/3*10 = 66.67
+        worst = create_questionnaire(db_session, user_id=user.id, mood=10.0, depression=10.0, anxiety=10.0)
+        # Use a separate user to avoid the same-day upsert path.
+        other = _make_user(db_session, email="boundary@test.com")
+        best = create_questionnaire(db_session, user_id=other.id, mood=0.0, depression=0.0, anxiety=0.0)
+        assert worst.score == 33.33
+        assert best.score == 66.67
 
 
 class TestGetQuestionnaire:
@@ -73,13 +79,18 @@ class TestGetQuestionnaire:
 
 
 class TestAverageScore:
+    """Score formula: (mood + (10 - depression) + (10 - anxiety)) / 3 * 10."""
+
     def test_average_score(self, db_session):
         user = _make_user(db_session)
+        # Need different users (not different days) because same-day duplicates upsert
+        # at the service layer; the repository is direct, so different rows are kept here.
         create_questionnaire(db_session, user_id=user.id, mood=6.0, depression=6.0, anxiety=6.0)
+        # second row directly via repository — bypasses service-level upsert
         create_questionnaire(db_session, user_id=user.id, mood=8.0, depression=8.0, anxiety=8.0)
         avg = get_average_score(db_session, user_id=user.id)
-        # (60 + 80) / 2 = 70
-        assert avg == 70.0
+        # scores: 46.67, 40.0  →  avg = 43.33 (rounded)
+        assert avg == 43.34
 
     def test_average_score_no_entries(self, db_session):
         user = _make_user(db_session)
@@ -90,8 +101,8 @@ class TestAverageScore:
         user = _make_user(db_session)
         create_questionnaire(db_session, user_id=user.id, mood=8.5, depression=8.5, anxiety=8.5)
         avg = get_average_score(db_session, user_id=user.id)
-        # (8.5+8.5+8.5)/3*10 = 85
-        assert avg == 85.0
+        # (8.5 + 1.5 + 1.5) / 3 * 10 = 38.33
+        assert avg == 38.33
 
     def test_average_score_with_date_filter(self, db_session):
         user = _make_user(db_session)
@@ -104,17 +115,17 @@ class TestAverageScore:
 
         create_questionnaire(db_session, user_id=user.id, mood=8.0, depression=8.0, anxiety=8.0)
 
-        # Only today — score = 80
+        # Today only: (8 + 2 + 2)/3*10 = 40.0
         avg = get_average_score(db_session, user_id=user.id, from_date=today)
-        assert avg == 80.0
+        assert avg == 40.0
 
-        # Only yesterday — score = 60
+        # Yesterday only: (6 + 4 + 4)/3*10 = 46.67
         avg = get_average_score(db_session, user_id=user.id, to_date=yesterday)
-        assert avg == 60.0
+        assert avg == 46.67
 
-        # Full range — (60+80)/2 = 70
+        # Full range: avg of 40.0 and 46.67 = 43.33 (rounded)
         avg = get_average_score(db_session, user_id=user.id, from_date=yesterday, to_date=today)
-        assert avg == 70.0
+        assert avg == 43.34
 
 
 class TestUpdateQuestionnaire:

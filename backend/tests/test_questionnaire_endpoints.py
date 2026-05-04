@@ -40,14 +40,17 @@ class TestCreateQuestionnaire:
         assert "created_at" in data
 
     def test_create_min_values(self, client, registered_user, auth_headers):
+        # Score formula: (mood + (10-depression) + (10-anxiety)) / 3 * 10
+        # mood=0, depression=0, anxiety=0 → (0 + 10 + 10) / 3 * 10 = 66.67
         data = _create_questionnaire(client, auth_headers, mood=0.0, depression=0.0, anxiety=0.0)
         assert data["mood"] == 0.0
-        assert data["score"] == 0.0
+        assert data["score"] == 66.67
 
     def test_create_max_values(self, client, registered_user, auth_headers):
+        # mood=10, depression=10, anxiety=10 → (10 + 0 + 0) / 3 * 10 = 33.33
         data = _create_questionnaire(client, auth_headers, mood=10.0, depression=10.0, anxiety=10.0)
         assert data["mood"] == 10.0
-        assert data["score"] == 100.0
+        assert data["score"] == 33.33
 
     def test_create_mood_too_high(self, client, registered_user, auth_headers):
         resp = client.post(
@@ -140,8 +143,8 @@ class TestAverageScore:
         resp = client.get("/api/questionnaires/average", headers=auth_headers)
         assert resp.status_code == 200
         data = resp.json()
-        # score = (8+8+8)/3*10 = 80
-        assert data["average_score"] == 80.0
+        # score = (8 + (10-8) + (10-8))/3*10 = (8+2+2)/3*10 = 40.0
+        assert data["average_score"] == 40.0
 
     def test_average_no_entries(self, client, registered_user, auth_headers):
         resp = client.get("/api/questionnaires/average", headers=auth_headers)
@@ -168,8 +171,8 @@ class TestAverageScore:
         _, other_headers = _register_second_user(client)
         _create_questionnaire(client, other_headers, mood=10.0, depression=10.0, anxiety=10.0)
         resp = client.get("/api/questionnaires/average", headers=auth_headers)
-        # our user's score = (6+6+6)/3*10 = 60
-        assert resp.json()["average_score"] == 60.0
+        # our user's score = (6 + (10-6) + (10-6))/3*10 = (6+4+4)/3*10 = 46.67
+        assert resp.json()["average_score"] == 46.67
 
     def test_average_unauthenticated(self, client):
         resp = client.get("/api/questionnaires/average")

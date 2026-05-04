@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import date
-from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
@@ -48,11 +47,11 @@ class QuestionnaireResponse(QuestionnaireBase):
 
     id: int
     user_id: int
-    score: Optional[float] = None
+    score: float | None = None
     created_at: date
 
 
 class QuestionnaireAverageResponse(BaseModel):
-    average_score: Optional[float] = None
-    from_date: Optional[date] = None
-    to_date: Optional[date] = None
+    average_score: float | None = None
+    from_date: date | None = None
+    to_date: date | None = None

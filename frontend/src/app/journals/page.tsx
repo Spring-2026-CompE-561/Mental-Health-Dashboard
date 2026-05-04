@@ -24,11 +24,37 @@ function formatDate(dateString: string): string {
   return d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 }
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-const SpeechRecognition: (new () => any) | null = typeof window !== "undefined"
-  ? (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
-  : null;
-/* eslint-enable @typescript-eslint/no-explicit-any */
+// SpeechRecognition is a vendor-prefixed Web API on some browsers; we use
+// `unknown` casts to keep the types loose without resorting to plain `any`.
+type SpeechRecognitionCtor = new () => SpeechRecognitionInstance;
+
+interface SpeechRecognitionInstance {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onend: (() => void) | null;
+  onerror: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+  abort: () => void;
+}
+
+interface SpeechRecognitionEvent {
+  results: ArrayLike<{ 0: { transcript: string } }>;
+}
+
+interface SpeechWindow extends Window {
+  SpeechRecognition?: SpeechRecognitionCtor;
+  webkitSpeechRecognition?: SpeechRecognitionCtor;
+}
+
+const SpeechRecognition: SpeechRecognitionCtor | null =
+  typeof window !== "undefined"
+    ? (window as SpeechWindow).SpeechRecognition ??
+      (window as SpeechWindow).webkitSpeechRecognition ??
+      null
+    : null;
 
 interface JournalModalProps {
   open: boolean;
@@ -42,8 +68,7 @@ interface JournalModalProps {
 function JournalModal({ open, mode, initialBody, onClose, onSave, saving }: JournalModalProps) {
   const [body, setBody] = useState(initialBody || "");
   const [listening, setListening] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
 
   useEffect(() => {
     if (!open && recognitionRef.current) {
@@ -66,12 +91,11 @@ function JournalModal({ open, mode, initialBody, onClose, onSave, saving }: Jour
     recognition.interimResults = false;
     recognition.lang = "en-US";
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    recognition.onresult = (event: any) => {
-      const transcript = Array.from(event.results as ArrayLike<{ 0: { transcript: string } }>)
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      const transcript = Array.from(event.results)
         .map((r) => r[0].transcript)
         .join("");
-      setBody((prev: string) => (prev ? prev + " " + transcript : transcript));
+      setBody((prev) => (prev ? prev + " " + transcript : transcript));
     };
 
     recognition.onend = () => setListening(false);

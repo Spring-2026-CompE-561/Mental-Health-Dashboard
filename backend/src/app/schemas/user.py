@@ -1,7 +1,6 @@
 """Pydantic schemas for user requests and responses."""
 
 from datetime import date
-from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 
@@ -43,8 +42,8 @@ class UserResponse(UserBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    oauth_provider: Optional[str] = None
-    created_at: Optional[date] = None
+    oauth_provider: str | None = None
+    created_at: date | None = None
 
 
 class SuccessResponse(BaseModel):
