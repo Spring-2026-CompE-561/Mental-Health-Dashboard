@@ -37,6 +37,77 @@ const METRIC_CHARTS: MetricChartConfig[] = [
 ];
 
 // ──────────────────────────────────────────────────────────
+// Mood suggestions
+// ──────────────────────────────────────────────────────────
+interface Suggestion {
+  emoji: string;
+  title: string;
+  body: string;
+}
+
+function getMoodSuggestions(score: number): { heading: string; color: string; suggestions: Suggestion[] } {
+  if (score >= 70) {
+    return {
+      heading: "You're doing great! Keep it up 🌟",
+      color: "#b2f9c8",
+      suggestions: [
+        { emoji: "📓", title: "Journal your wins", body: "Write down what's going well — it reinforces positive patterns." },
+        { emoji: "🧘", title: "Keep your routine", body: "Consistency is key. Maintain the habits that are working for you." },
+        { emoji: "🤝", title: "Support someone else", body: "Reach out to a friend or family member who might need a boost." },
+      ],
+    };
+  }
+  if (score >= 40) {
+    return {
+      heading: "You're managing — here are some tips 💙",
+      color: "#b2def9",
+      suggestions: [
+        { emoji: "🚶", title: "Take a short walk", body: "Even 10 minutes outside can lift your mood significantly." },
+        { emoji: "💧", title: "Stay hydrated", body: "Dehydration affects mood more than most people realize." },
+        { emoji: "📓", title: "Write it out", body: "Journaling your thoughts can help you process what you're feeling." },
+        { emoji: "😴", title: "Prioritize sleep", body: "Aim for 7–8 hours tonight — sleep has a huge impact on mood." },
+      ],
+    };
+  }
+  return {
+    heading: "It's okay to have hard days — you're not alone 💗",
+    color: "#f9b2d7",
+    suggestions: [
+      { emoji: "🫁", title: "Try box breathing", body: "Inhale 4s → hold 4s → exhale 4s → hold 4s. Repeat 4 times." },
+      { emoji: "📞", title: "Reach out to someone", body: "Talk to a friend, family member, or counselor about how you feel." },
+      { emoji: "🛁", title: "Do one small kind thing for yourself", body: "A warm shower, your favourite meal, or a short rest." },
+      { emoji: "🏥", title: "Consider professional support", body: "If low scores persist, speaking to a mental health professional can really help." },
+    ],
+  };
+}
+
+function MoodSuggestionsCard({ score }: { score: number }) {
+  const { heading, color, suggestions } = getMoodSuggestions(score);
+  return (
+    <Card className="rounded-[24px] px-[28px] py-[24px]" style={{ borderColor: color }}>
+      <p className="font-semibold text-[16px] md:text-[18px] mb-4" style={{ color }}>
+        {heading}
+      </p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {suggestions.map((s) => (
+          <div
+            key={s.title}
+            className="flex gap-3 rounded-xl p-4"
+            style={{ backgroundColor: "var(--page-bg)" }}
+          >
+            <span className="text-[24px] shrink-0">{s.emoji}</span>
+            <div>
+              <p className="font-semibold text-[14px] mb-1" style={{ color: "var(--heading-color)" }}>{s.title}</p>
+              <p className="text-[13px]" style={{ color: "var(--secondary-color)" }}>{s.body}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
+// ──────────────────────────────────────────────────────────
 // Chart data types
 // ──────────────────────────────────────────────────────────
 
@@ -508,7 +579,8 @@ function DashboardContent() {
             </Button>
           </Card>
         </div>
-
+        {/* Mood suggestions */}
+        {todayScore !== null && <MoodSuggestionsCard score={todayScore} />}
         {error && (
           <div
             className="px-4 py-3 rounded-xl text-sm"
@@ -628,7 +700,7 @@ function DashboardContent() {
             ))}
           </div>
         </div>
-
+        
         {/* Recent journal entries */}
         <Card className="flex flex-col p-[28px] md:p-[40px]">
           <h2
