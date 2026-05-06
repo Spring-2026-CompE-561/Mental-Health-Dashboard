@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { toast } from "sonner";
 import AppHeader from "@/components/AppHeader";
+import { JOURNAL_PROMPTS } from "@/data/journalPrompts";
 import { ProtectedRoute } from "@/contexts/AuthContext";
 import {
   createJournal,
@@ -81,7 +82,10 @@ interface JournalModalProps {
 function JournalModal({ open, mode, initialBody, onClose, onSave, saving }: JournalModalProps) {
   const [body, setBody] = useState(initialBody || "");
   const [listening, setListening] = useState(false);
+  const [promptPlaceholder, setPromptPlaceholder] = useState("What's on your mind today?");
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
+  const lastPromptRef = useRef<number>(-1);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
     if (!open && recognitionRef.current) {
@@ -119,6 +123,15 @@ function JournalModal({ open, mode, initialBody, onClose, onSave, saving }: Jour
     setListening(true);
   }
 
+  const insertPrompt = useCallback(() => {
+    let idx: number;
+    do {
+      idx = Math.floor(Math.random() * JOURNAL_PROMPTS.length);
+    } while (idx === lastPromptRef.current && JOURNAL_PROMPTS.length > 1);
+    lastPromptRef.current = idx;
+    setPromptPlaceholder(JOURNAL_PROMPTS[idx]);
+  }, []);
+
   if (!open) return null;
 
   return (
@@ -128,7 +141,7 @@ function JournalModal({ open, mode, initialBody, onClose, onSave, saving }: Jour
       onClick={onClose}
     >
       <Card
-        className="w-full max-w-[640px] rounded-[24px] p-[32px] md:p-[40px] flex flex-col gap-[24px] max-h-[90vh]"
+        className="relative w-full max-w-[640px] rounded-[24px] p-[32px] md:p-[40px] flex flex-col gap-[24px] max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="absolute top-0 left-0 w-full h-[6px] flex">
@@ -149,7 +162,7 @@ function JournalModal({ open, mode, initialBody, onClose, onSave, saving }: Jour
           <textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            placeholder="What's on your mind today?"
+            placeholder={promptPlaceholder}
             rows={10}
             autoFocus
             className="w-full rounded-2xl focus:ring-4 focus:ring-[#b2def9]/10 focus:outline-none p-[16px] pr-[48px] text-[16px] resize-none transition-all"
@@ -167,22 +180,37 @@ function JournalModal({ open, mode, initialBody, onClose, onSave, saving }: Jour
               e.target.style.backgroundColor = "var(--input-bg)";
             }}
           />
-          {SpeechRecognition && (
-            <button
-              type="button"
-              onClick={toggleListening}
-              className={`absolute bottom-3 right-3 w-[36px] h-[36px] rounded-full border-none cursor-pointer flex items-center justify-center transition-all ${listening ? "bg-[#f9b2d7] animate-pulse" : "hover:opacity-80"}`}
-              style={!listening ? { backgroundColor: "var(--border-color)" } : undefined}
-              title={listening ? "Stop recording" : "Speak to type"}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 1C10.34 1 9 2.34 9 4V12C9 13.66 10.34 15 12 15C13.66 15 15 13.66 15 12V4C15 2.34 13.66 1 12 1Z" fill={listening ? "#fff" : "var(--secondary-color)"} />
-                <path d="M19 10V12C19 15.87 15.87 19 12 19C8.13 19 5 15.87 5 12V10" stroke={listening ? "#fff" : "var(--secondary-color)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M12 19V23" stroke={listening ? "#fff" : "var(--secondary-color)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M8 23H16" stroke={listening ? "#fff" : "var(--secondary-color)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
-          )}
+          <div className="absolute bottom-3 right-3 flex items-center gap-2">
+            {mode === "create" && (
+              <button
+                type="button"
+                onClick={insertPrompt}
+                className="w-[36px] h-[36px] rounded-full border-none cursor-pointer flex items-center justify-center transition-all hover:opacity-80"
+                style={{ backgroundColor: "var(--border-color)" }}
+                title="Get a writing prompt"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path d="M9 18h6M10 22h4M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1h-6a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z" stroke="var(--secondary-color)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            )}
+            {SpeechRecognition && (
+              <button
+                type="button"
+                onClick={toggleListening}
+                className={`w-[36px] h-[36px] rounded-full border-none cursor-pointer flex items-center justify-center transition-all ${listening ? "bg-[#f9b2d7] animate-pulse" : "hover:opacity-80"}`}
+                style={!listening ? { backgroundColor: "var(--border-color)" } : undefined}
+                title={listening ? "Stop recording" : "Speak to type"}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 1C10.34 1 9 2.34 9 4V12C9 13.66 10.34 15 12 15C13.66 15 15 13.66 15 12V4C15 2.34 13.66 1 12 1Z" fill={listening ? "#fff" : "var(--secondary-color)"} />
+                  <path d="M19 10V12C19 15.87 15.87 19 12 19C8.13 19 5 15.87 5 12V10" stroke={listening ? "#fff" : "var(--secondary-color)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M12 19V23" stroke={listening ? "#fff" : "var(--secondary-color)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M8 23H16" stroke={listening ? "#fff" : "var(--secondary-color)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            )}
+          </div>
         </div>
 
         <p className="text-[13px] text-right m-0" style={{ color: "var(--muted-color)" }}>
@@ -268,6 +296,7 @@ function JournalsContent() {
       }
       closeModal();
       await refresh();
+      window.scrollTo({ top: 0, behavior: "smooth" });
       toast.success(isEdit ? "Entry updated" : "Entry saved");
     } catch {
       toast.error("Could not save. Try again.");
