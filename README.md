@@ -43,9 +43,9 @@ docker compose up db
 
 ```bash
 cd backend
-uv sync                     # or: python -m venv .venv && .venv/bin/pip install -r requirements.txt
-uv run alembic upgrade head # apply migrations
-uv run dev                  # runs on http://127.0.0.1:8000
+uv sync                   
+uv run alembic upgrade head 
+uv run dev               
 ```
 
 **3. Frontend:**
@@ -151,9 +151,6 @@ Mental-Health-Dashboard/
 │   └── vitest.integration.config.ts
 └── docker-compose.yml
 ```
-
-The frontend is **TypeScript-only** — there are no `.js` files in `frontend/src`.
-
 ---
 
 ## Team
