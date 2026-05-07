@@ -23,10 +23,13 @@ async def get_me(current_user: User = Depends(get_current_user)):
 
 
 @router.get("/{user_id}", response_model=UserResponse)
-async def get_user(user_id: int, db: Session = Depends(get_db)):
+async def get_user(
+    user_id: int, 
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
     """Retrieve a single user by ID."""
     return get_by_id(db, user_id)
-
 
 @router.put("/{user_id}", response_model=SuccessResponse)
 async def update_user_password(
