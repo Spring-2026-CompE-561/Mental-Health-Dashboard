@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import Logo from "./Logo";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface NavLink {
   label: string;
@@ -23,6 +24,7 @@ const NAV_LINKS: NavLink[] = [
 
 export default function AppHeader({ title = "Mental Health Dashboard", links = [] }: AppHeaderProps) {
   const { isAuthenticated, signOut } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -73,6 +75,41 @@ export default function AppHeader({ title = "Mental Health Dashboard", links = [
             </Link>
           );
         })}
+
+        {isAuthenticated && (
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+            title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+            className="ml-2 w-[40px] h-[40px] rounded-full border-none cursor-pointer flex items-center justify-center transition-all hover:opacity-80"
+            style={{ backgroundColor: "var(--border-color)" }}
+          >
+            {isDark ? (
+              // Sun (currently dark, click goes to light)
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="12" cy="12" r="4" fill="var(--heading-color)" />
+                <path
+                  d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"
+                  stroke="var(--heading-color)"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              </svg>
+            ) : (
+              // Moon (currently light, click goes to dark)
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path
+                  d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"
+                  fill="var(--heading-color)"
+                  stroke="var(--heading-color)"
+                  strokeWidth="2"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            )}
+          </button>
+        )}
       </nav>
     </header>
   );

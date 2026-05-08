@@ -5,9 +5,11 @@ import { toast } from "sonner";
 import AppHeader from "@/components/AppHeader";
 import { JOURNAL_PROMPTS } from "@/data/journalPrompts";
 import { ProtectedRoute } from "@/contexts/AuthContext";
+import { checkGrammar, type GrammarMatch } from "@/lib/grammarCheck";
 import {
   createJournal,
   deleteJournal,
+  getAiPrompt,
   getJournals,
   updateJournal,
 } from "@/services/api";
@@ -83,6 +85,9 @@ function JournalModal({ open, mode, initialBody, onClose, onSave, saving }: Jour
   const [body, setBody] = useState(initialBody || "");
   const [listening, setListening] = useState(false);
   const [promptPlaceholder, setPromptPlaceholder] = useState("What's on your mind today?");
+  const [promptLoading, setPromptLoading] = useState(false);
+  const [grammarMatches, setGrammarMatches] = useState<GrammarMatch[]>([]);
+  const [grammarLoading, setGrammarLoading] = useState(false);
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const lastPromptRef = useRef<number>(-1);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -94,7 +99,36 @@ function JournalModal({ open, mode, initialBody, onClose, onSave, saving }: Jour
       setListening(false);
     }
     setBody(initialBody || "");
+    setGrammarMatches([]);
   }, [initialBody, open]);
+
+  // Debounced grammar/spell check via LanguageTool. Runs only while modal open
+  // and resets on every keystroke, abandoning prior in-flight requests.
+  useEffect(() => {
+    if (!open) return;
+    if (!body || body.trim().length < 6) {
+      setGrammarMatches([]);
+      return;
+    }
+    const controller = new AbortController();
+    const handle = window.setTimeout(async () => {
+      setGrammarLoading(true);
+      try {
+        const matches = await checkGrammar(body, controller.signal);
+        if (!controller.signal.aborted) setGrammarMatches(matches);
+      } finally {
+        if (!controller.signal.aborted) setGrammarLoading(false);
+      }
+    }, 800);
+    return () => {
+      controller.abort();
+      window.clearTimeout(handle);
+    };
+  }, [body, open]);
+
+  function applyReplacement(match: GrammarMatch, replacement: string) {
+    setBody((prev) => prev.slice(0, match.offset) + replacement + prev.slice(match.offset + match.length));
+  }
 
   function toggleListening() {
     if (listening && recognitionRef.current) {
@@ -123,14 +157,26 @@ function JournalModal({ open, mode, initialBody, onClose, onSave, saving }: Jour
     setListening(true);
   }
 
-  const insertPrompt = useCallback(() => {
-    let idx: number;
-    do {
-      idx = Math.floor(Math.random() * JOURNAL_PROMPTS.length);
-    } while (idx === lastPromptRef.current && JOURNAL_PROMPTS.length > 1);
-    lastPromptRef.current = idx;
-    setPromptPlaceholder(JOURNAL_PROMPTS[idx]);
-  }, []);
+  const insertPrompt = useCallback(async () => {
+    if (promptLoading) return;
+    setPromptLoading(true);
+    try {
+      // Try the AI-backed endpoint first; it transparently falls back to the
+      // server's curated list when GROQ_API_KEY is not configured.
+      const { prompt } = await getAiPrompt();
+      setPromptPlaceholder(prompt);
+    } catch {
+      // Last-resort fallback to the bundled static list, so the button never feels broken.
+      let idx: number;
+      do {
+        idx = Math.floor(Math.random() * JOURNAL_PROMPTS.length);
+      } while (idx === lastPromptRef.current && JOURNAL_PROMPTS.length > 1);
+      lastPromptRef.current = idx;
+      setPromptPlaceholder(JOURNAL_PROMPTS[idx]);
+    } finally {
+      setPromptLoading(false);
+    }
+  }, [promptLoading]);
 
   if (!open) return null;
 
@@ -185,9 +231,11 @@ function JournalModal({ open, mode, initialBody, onClose, onSave, saving }: Jour
               <button
                 type="button"
                 onClick={insertPrompt}
-                className="w-[36px] h-[36px] rounded-full border-none cursor-pointer flex items-center justify-center transition-all hover:opacity-80"
+                disabled={promptLoading}
+                className={`w-[36px] h-[36px] rounded-full border-none flex items-center justify-center transition-all ${promptLoading ? "opacity-60 animate-pulse cursor-wait" : "cursor-pointer hover:opacity-80"}`}
                 style={{ backgroundColor: "var(--border-color)" }}
-                title="Get a writing prompt"
+                title={promptLoading ? "Asking AI…" : "Suggest a writing prompt (AI)"}
+                aria-label="Suggest a writing prompt"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                   <path d="M9 18h6M10 22h4M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1h-6a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z" stroke="var(--secondary-color)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -212,6 +260,74 @@ function JournalModal({ open, mode, initialBody, onClose, onSave, saving }: Jour
             )}
           </div>
         </div>
+
+        {/* Grammar / spelling suggestions (LanguageTool, free public API). */}
+        {(grammarLoading || grammarMatches.length > 0) && (
+          <div
+            className="rounded-2xl px-[16px] py-[12px] flex flex-col gap-[8px] max-h-[160px] overflow-auto"
+            style={{
+              backgroundColor: "var(--input-bg)",
+              border: "1px solid var(--border-light)",
+            }}
+            aria-live="polite"
+          >
+            {grammarLoading && grammarMatches.length === 0 ? (
+              <p className="text-[13px] m-0" style={{ color: "var(--muted-color)" }}>
+                Checking grammar…
+              </p>
+            ) : (
+              <>
+                <p className="text-[13px] font-medium m-0" style={{ color: "var(--secondary-color)" }}>
+                  {grammarMatches.length} suggestion{grammarMatches.length === 1 ? "" : "s"}
+                </p>
+                {grammarMatches.slice(0, 5).map((m, i) => {
+                  const original = body.slice(m.offset, m.offset + m.length);
+                  const dotColor =
+                    m.category === "spelling"
+                      ? "#f9b2d7"
+                      : m.category === "grammar"
+                        ? "#b2def9"
+                        : m.category === "style"
+                          ? "#f9f0b2"
+                          : "#b2f9c8";
+                  return (
+                    <div key={i} className="flex flex-wrap items-center gap-[8px] text-[13px]">
+                      <span
+                        className="inline-block w-[8px] h-[8px] rounded-full shrink-0"
+                        style={{ backgroundColor: dotColor }}
+                        aria-hidden="true"
+                      />
+                      <span style={{ color: "var(--body-color)" }}>{m.message}</span>
+                      <code
+                        className="px-[6px] py-[2px] rounded text-[12px]"
+                        style={{ backgroundColor: "var(--border-light)", color: "var(--secondary-color)" }}
+                      >
+                        {original}
+                      </code>
+                      {m.replacements.length > 0 && (
+                        <span className="flex items-center gap-[4px]">
+                          <span style={{ color: "var(--muted-color)" }}>→</span>
+                          {m.replacements.map((rep, j) => (
+                            <button
+                              key={j}
+                              type="button"
+                              onClick={() => applyReplacement(m, rep)}
+                              className="px-[8px] py-[2px] rounded-full text-[12px] cursor-pointer border-none transition-all hover:opacity-80"
+                              style={{ backgroundColor: dotColor, color: "#1a1a1a" }}
+                              title={`Replace "${original}" with "${rep}"`}
+                            >
+                              {rep}
+                            </button>
+                          ))}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </>
+            )}
+          </div>
+        )}
 
         <p className="text-[13px] text-right m-0" style={{ color: "var(--muted-color)" }}>
           {body.trim() ? body.trim().split(/\s+/).length : 0} {body.trim().split(/\s+/).length === 1 && body.trim() ? "word" : "words"}

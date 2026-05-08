@@ -18,8 +18,17 @@ describe("Logo", () => {
     expect(svg?.getAttribute("height")).toBe("64");
   });
 
-  it("respects custom stroke color", () => {
+  it("respects custom stroke color on the halo ring", () => {
     const { container } = render(<Logo stroke="#abcdef" />);
-    expect(container.querySelector("circle[r='14']")?.getAttribute("stroke")).toBe("#abcdef");
+    // The outermost halo circle is the largest one in the SVG.
+    const halo = container.querySelector("circle[r='19']");
+    expect(halo?.getAttribute("stroke")).toBe("#abcdef");
+  });
+
+  it("exposes an accessible label so screen readers describe the mark", () => {
+    const { container } = render(<Logo />);
+    const svg = container.querySelector("svg");
+    expect(svg?.getAttribute("role")).toBe("img");
+    expect(svg?.getAttribute("aria-label") ?? "").toMatch(/lotus|breath|logo/i);
   });
 });

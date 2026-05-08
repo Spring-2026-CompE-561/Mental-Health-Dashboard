@@ -23,3 +23,10 @@ class JournalResponse(JournalBase):
     id: int
     user_id: int
     created_at: date
+
+
+class JournalPromptResponse(BaseModel):
+    """Response from the AI prompt suggestion endpoint."""
+
+    prompt: str
+    source: str  # "ai" when Groq generated it, "fallback" when from the curated list

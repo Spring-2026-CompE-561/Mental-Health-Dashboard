@@ -73,30 +73,70 @@ async def add_security_headers(request: Request, call_next):
 # Rate limiting middleware (in-memory, per-IP)
 # ──────────────────────────────────────────────────────────
 
-# Stores {ip: [timestamp1, timestamp2, ...]} — cleaned up lazily
-_rate_limit_store: dict[str, list[float]] = defaultdict(list)
-RATE_LIMIT_MAX = 60  # max requests per window
-RATE_LIMIT_WINDOW = 60  # window in seconds
+# Per-bucket counters: {(ip, bucket): [timestamps]}. Pruned lazily.
+_rate_limit_store: dict[tuple[str, str], list[float]] = defaultdict(list)
+
+# Sliding-window limits: (max_requests, window_seconds)
+RATE_LIMITS = {
+    "global": (120, 60),   # safety net for a single IP across the whole API
+    "auth":   (5,   60),   # login / create-account / forgot-password / reset-password
+    "ai":     (10,  60),   # AI prompt suggestion endpoint (Groq calls cost money)
+}
+
+# Path → bucket mapping. Order matters: first match wins.
+_AUTH_PATHS = (
+    "/api/login",
+    "/api/create-account",
+    "/api/forgot-password",
+    "/api/reset-password",
+)
+_AI_PATHS = ("/api/journals/ai-prompt",)
+
+
+def _bucket_for(path: str) -> str:
+    if path.startswith(_AI_PATHS):
+        return "ai"
+    if path in _AUTH_PATHS:
+        return "auth"
+    return "global"
+
+
+def _allowed(client_ip: str, bucket: str, now: float) -> bool:
+    max_req, window = RATE_LIMITS[bucket]
+    cutoff = now - window
+    key = (client_ip, bucket)
+    fresh = [t for t in _rate_limit_store[key] if t > cutoff]
+    if len(fresh) >= max_req:
+        _rate_limit_store[key] = fresh
+        return False
+    fresh.append(now)
+    _rate_limit_store[key] = fresh
+    return True
 
 
 @app.middleware("http")
 async def rate_limiter(request: Request, call_next):
-    """Simple per-IP rate limiter. Returns 429 if the client exceeds the threshold."""
+    """Sliding-window per-IP rate limiter with stricter buckets for auth + AI routes."""
     client_ip = request.client.host if request.client else "unknown"
     now = time.time()
-    cutoff = now - RATE_LIMIT_WINDOW
+    bucket = _bucket_for(request.url.path)
 
-    # prune old timestamps
-    timestamps = _rate_limit_store[client_ip]
-    _rate_limit_store[client_ip] = [t for t in timestamps if t > cutoff]
-
-    if len(_rate_limit_store[client_ip]) >= RATE_LIMIT_MAX:
+    # Always enforce the global bucket too — the per-route bucket is on top of it.
+    if not _allowed(client_ip, "global", now):
         return JSONResponse(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             content={"detail": "Too many requests. Please try again later."},
         )
-
-    _rate_limit_store[client_ip].append(now)
+    if bucket != "global" and not _allowed(client_ip, bucket, now):
+        return JSONResponse(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            content={
+                "detail": (
+                    "Too many sensitive requests. "
+                    "Please wait a minute before trying again."
+                ),
+            },
+        )
     return await call_next(request)
 
 
