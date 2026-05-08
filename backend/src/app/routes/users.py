@@ -11,21 +11,29 @@ from app.schemas.user import (
     UserResponse,
     UserUpdatePassword,
 )
-from app.services.user_service import change_password, get_by_id, remove_account
+from app.services.user_service import change_password, remove_account
 
 router = APIRouter()
 
 
 @router.get("/me", response_model=UserResponse)
 async def get_me(current_user: User = Depends(get_current_user)):
-    """Get the currently authenticated user."""
+    """Get the currently authenticated user. Only path to fetch a user profile."""
     return current_user
 
 
-@router.get("/{user_id}", response_model=UserResponse)
-async def get_user(user_id: int, db: Session = Depends(get_db)):
-    """Retrieve a single user by ID."""
-    return get_by_id(db, user_id)
+# Intentionally NO `GET /users/{user_id}` endpoint.
+#
+# The previous implementation exposed every user's name + email to any caller
+# (no auth required) and an authenticated variant still permitted enumeration
+# of arbitrary user IDs. Both are IDOR / authorization-bypass bugs. The frontend
+# only ever needs the caller's own profile, which `/users/me` already serves.
+#
+# If a future feature genuinely needs to look up a user by id, add a narrow
+# endpoint that:
+#   1. Requires `current_user`.
+#   2. Returns 404 unless `user_id == current_user.id` (or admin role).
+#   3. Strips PII (no email) for non-self lookups.
 
 
 @router.put("/{user_id}", response_model=SuccessResponse)

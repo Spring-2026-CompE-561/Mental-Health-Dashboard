@@ -96,15 +96,35 @@ class TestGetUser:
         resp = client.get("/api/users/me", headers={"Authorization": "Bearer invalid-token"})
         assert resp.status_code == 401
 
-    def test_get_user_by_id(self, client, registered_user):
+    def test_get_user_by_id_endpoint_is_removed_unauthenticated(self, client, registered_user):
+        # Regression for the IDOR leak: an anonymous caller must not get user data.
         uid = registered_user["id"]
         resp = client.get(f"/api/users/{uid}")
-        assert resp.status_code == 200
-        assert resp.json()["id"] == uid
+        assert resp.status_code in (401, 404, 405), (
+            f"GET /api/users/{{id}} must not return user data without auth. "
+            f"Got {resp.status_code}: {resp.text}"
+        )
+        # And whatever response code, the body MUST NOT contain PII.
+        body = resp.text.lower()
+        assert "@" not in body, "Response leaked an email address"
+        assert "username" not in body, "Response leaked a username field"
 
-    def test_get_user_not_found(self, client):
-        resp = client.get("/api/users/99999")
-        assert resp.status_code == 404
+    def test_get_user_by_id_endpoint_is_removed_authenticated(self, client, registered_user, auth_headers):
+        # Defence-in-depth: even an authenticated caller cannot enumerate users.
+        uid = registered_user["id"]
+        resp = client.get(f"/api/users/{uid}", headers=auth_headers)
+        assert resp.status_code in (401, 404, 405), (
+            f"GET /api/users/{{id}} must not return user data even when authenticated. "
+            f"Got {resp.status_code}: {resp.text}"
+        )
+
+    def test_cannot_enumerate_other_users_via_id(self, client, registered_user, auth_headers):
+        # Regression: hitting other plausible IDs returns nothing useful.
+        for victim_id in (1, 2, 3, 99, 200, 9999):
+            resp = client.get(f"/api/users/{victim_id}", headers=auth_headers)
+            assert resp.status_code in (401, 404, 405), (
+                f"Enumeration possible at /api/users/{victim_id}: {resp.status_code} {resp.text}"
+            )
 
 
 class TestChangePassword:
