@@ -189,4 +189,14 @@ describe("api service", () => {
     await deleteAccount(7, { password: "pw" });
     expect(mocks.del).toHaveBeenCalledWith("/users/7", { data: { password: "pw" } });
   });
+
+  it("getAiPrompt() GETs /journals/ai-prompt and returns prompt+source", async () => {
+    const { getAiPrompt } = await import("./api");
+    mocks.get.mockResolvedValueOnce({
+      data: { prompt: "What is sitting with you today?", source: "ai" },
+    });
+    const out = await getAiPrompt();
+    expect(mocks.get).toHaveBeenCalledWith("/journals/ai-prompt");
+    expect(out).toEqual({ prompt: "What is sitting with you today?", source: "ai" });
+  });
 });

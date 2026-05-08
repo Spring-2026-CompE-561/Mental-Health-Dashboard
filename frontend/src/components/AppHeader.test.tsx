@@ -83,4 +83,25 @@ describe("AppHeader", () => {
     await waitFor(() => expect(screen.getByText("Help")).toBeInTheDocument());
     expect(screen.getByText("Help").closest("a")).toHaveAttribute("href", "/help");
   });
+
+  it("does NOT render the theme toggle when the user is signed out (theme follows OS)", async () => {
+    render(withProviders(<AppHeader />));
+    await waitFor(() => expect(screen.getByText("Mental Health Dashboard")).toBeInTheDocument());
+    expect(screen.queryByLabelText(/switch to (dark|light) mode/i)).not.toBeInTheDocument();
+  });
+
+  it("renders the theme toggle in the navbar when signed in", async () => {
+    localStorage.setItem("access_token", "tok");
+    apiMocks.getMe.mockResolvedValue({
+      id: 1,
+      username: "varma",
+      email: "v@x.com",
+      oauth_provider: null,
+      created_at: "2026-01-01",
+    });
+    render(withProviders(<AppHeader />));
+    await waitFor(() => expect(screen.getByText("Journals")).toBeInTheDocument());
+    const toggle = screen.getByLabelText(/switch to (dark|light) mode/i);
+    expect(toggle).toBeInTheDocument();
+  });
 });

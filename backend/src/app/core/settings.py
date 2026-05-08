@@ -30,7 +30,12 @@ class Settings(BaseSettings):
     # How long a password-reset token is valid (minutes)
     reset_token_expire_minutes: int = 60
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    # Optional AI: Groq free-tier API key for journal prompt suggestions.
+    # When unset, /journals/ai-prompt falls back to a curated static list.
+    groq_api_key: str = ""
+    groq_model: str = "llama-3.1-8b-instant"
+
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
 
 settings = Settings()

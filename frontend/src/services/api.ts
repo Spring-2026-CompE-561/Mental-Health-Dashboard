@@ -122,6 +122,16 @@ export async function deleteJournal(id: number): Promise<SuccessResponse> {
   return data;
 }
 
+export interface AiPromptResponse {
+  prompt: string;
+  source: "ai" | "fallback";
+}
+
+export async function getAiPrompt(): Promise<AiPromptResponse> {
+  const { data } = await api.get<AiPromptResponse>("/journals/ai-prompt");
+  return data;
+}
+
 // ──────────────────────────────────────────────────────────
 // Questionnaires
 // ──────────────────────────────────────────────────────────
