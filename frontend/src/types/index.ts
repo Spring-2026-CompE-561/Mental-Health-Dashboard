@@ -98,6 +98,21 @@ export interface DeleteAccountRequest {
   password: string;
 }
 
+// ── AI Suggestions ─────────────────────────────────────────
+
+export interface MoodSuggestionItem {
+  emoji: string;
+  title: string;
+  body: string;
+}
+
+export interface MoodSuggestionsResponse {
+  heading: string;
+  color: string;
+  suggestions: MoodSuggestionItem[];
+  source: string;
+}
+
 // ── Generic ─────────────────────────────────────────────────
 
 export interface SuccessResponse {

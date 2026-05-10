@@ -15,7 +15,7 @@ from fastapi.responses import JSONResponse
 import app.models  # noqa: F401  — force all ORM models to register with Base
 from app.core.database import create_tables
 from app.core.settings import settings
-from app.routes import auth, journal, questionnaires, users
+from app.routes import ai, auth, journal, questionnaires, users
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("mental_health_api")
@@ -90,7 +90,7 @@ _AUTH_PATHS = (
     "/api/forgot-password",
     "/api/reset-password",
 )
-_AI_PATHS = ("/api/journals/ai-prompt",)
+_AI_PATHS = ("/api/journals/ai-prompt", "/api/ai/")
 
 
 def _bucket_for(path: str) -> str:
@@ -165,6 +165,7 @@ app.include_router(auth.router, prefix="/api", tags=["Authentication"])
 app.include_router(users.router, prefix="/api/users", tags=["Users"])
 app.include_router(journal.router, prefix="/api/journals", tags=["Journals"])
 app.include_router(questionnaires.router, prefix="/api/questionnaires", tags=["Questionnaires"])
+app.include_router(ai.router, prefix="/api/ai", tags=["AI"])
 
 
 @app.get("/")

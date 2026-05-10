@@ -8,6 +8,7 @@ import type {
   Journal,
   JournalCreateRequest,
   JournalUpdateRequest,
+  MoodSuggestionsResponse,
   Questionnaire,
   QuestionnaireAverage,
   QuestionnaireCreateRequest,
@@ -129,6 +130,15 @@ export interface AiPromptResponse {
 
 export async function getAiPrompt(): Promise<AiPromptResponse> {
   const { data } = await api.get<AiPromptResponse>("/journals/ai-prompt");
+  return data;
+}
+
+// ──────────────────────────────────────────────────────────
+// AI Suggestions
+// ──────────────────────────────────────────────────────────
+
+export async function getAiMoodSuggestions(): Promise<MoodSuggestionsResponse> {
+  const { data } = await api.get<MoodSuggestionsResponse>("/ai/mood-suggestions");
   return data;
 }
 
