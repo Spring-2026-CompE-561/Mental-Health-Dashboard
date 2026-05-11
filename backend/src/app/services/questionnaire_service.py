@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.models.questionnaire import Questionnaire
 from app.models.user import User
+from app.repository.ai_suggestion import delete_suggestions_for_today
 from app.repository.questionnaire import (
     create_questionnaire as repo_create,
 )
@@ -33,14 +34,17 @@ def create(db: Session, user: User, data: QuestionnaireCreate) -> Questionnaire:
     """Create a new questionnaire entry for the given user."""
     existing = get_questionnaire_for_date(db, user_id=user.id, target_date=date.today())
     if existing:
-        return repo_update(db, existing, mood=data.mood, depression=data.depression, anxiety=data.anxiety)
-    return repo_create(
-        db,
-        user_id=user.id,
-        mood=data.mood,
-        depression=data.depression,
-        anxiety=data.anxiety,
-    )
+        result = repo_update(db, existing, mood=data.mood, depression=data.depression, anxiety=data.anxiety)
+    else:
+        result = repo_create(
+            db,
+            user_id=user.id,
+            mood=data.mood,
+            depression=data.depression,
+            anxiety=data.anxiety,
+        )
+    delete_suggestions_for_today(db, user.id, "mood")
+    return result
 
 
 def get_today(db: Session, user: User) -> Questionnaire | None:

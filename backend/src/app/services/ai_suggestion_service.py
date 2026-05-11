@@ -185,6 +185,11 @@ async def get_mood_suggestions(
             )
         r.raise_for_status()
         raw = r.json().get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+        if raw.startswith("```"):
+            raw = raw.split("\n", 1)[1] if "\n" in raw else raw[3:]
+        if raw.endswith("```"):
+            raw = raw[:-3]
+        raw = raw.strip()
         parsed = json.loads(raw)
         result = {
             "heading": parsed.get("heading", "Here are some suggestions"),
