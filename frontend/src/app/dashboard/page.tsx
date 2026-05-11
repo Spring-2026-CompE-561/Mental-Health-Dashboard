@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import AppHeader from "@/components/AppHeader";
 import { useAuth, ProtectedRoute } from "@/contexts/AuthContext";
-import { getJournals, getQuestionnaires } from "@/services/api";
-import type { Journal, Questionnaire } from "@/types";
+import { getAiMoodSuggestions, getJournals, getQuestionnaires } from "@/services/api";
+import type { Journal, MoodSuggestionsResponse, Questionnaire } from "@/types";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -39,17 +39,13 @@ const METRIC_CHARTS: MetricChartConfig[] = [
 // ──────────────────────────────────────────────────────────
 // Mood suggestions
 // ──────────────────────────────────────────────────────────
-interface Suggestion {
-  emoji: string;
-  title: string;
-  body: string;
-}
 
-function getMoodSuggestions(score: number): { heading: string; color: string; suggestions: Suggestion[] } {
+function getMoodSuggestions(score: number): MoodSuggestionsResponse {
   if (score >= 70) {
     return {
       heading: "You're doing great! Keep it up 🌟",
       color: "#b2f9c8",
+      source: "fallback",
       suggestions: [
         { emoji: "📓", title: "Journal your wins", body: "Write down what's going well — it reinforces positive patterns." },
         { emoji: "🧘", title: "Keep your routine", body: "Consistency is key. Maintain the habits that are working for you." },
@@ -61,6 +57,7 @@ function getMoodSuggestions(score: number): { heading: string; color: string; su
     return {
       heading: "You're managing — here are some tips 💙",
       color: "#b2def9",
+      source: "fallback",
       suggestions: [
         { emoji: "🚶", title: "Take a short walk", body: "Even 10 minutes outside can lift your mood significantly." },
         { emoji: "💧", title: "Stay hydrated", body: "Dehydration affects mood more than most people realize." },
@@ -72,6 +69,7 @@ function getMoodSuggestions(score: number): { heading: string; color: string; su
   return {
     heading: "It's okay to have hard days — you're not alone 💗",
     color: "#f9b2d7",
+    source: "fallback",
     suggestions: [
       { emoji: "🫁", title: "Try box breathing", body: "Inhale 4s → hold 4s → exhale 4s → hold 4s. Repeat 4 times." },
       { emoji: "📞", title: "Reach out to someone", body: "Talk to a friend, family member, or counselor about how you feel." },
@@ -82,14 +80,30 @@ function getMoodSuggestions(score: number): { heading: string; color: string; su
 }
 
 function MoodSuggestionsCard({ score }: { score: number }) {
-  const { heading, color, suggestions } = getMoodSuggestions(score);
+  const fallback = getMoodSuggestions(score);
+  const [data, setData] = useState<MoodSuggestionsResponse>(fallback);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    getAiMoodSuggestions()
+      .then((res) => {
+        if (!cancelled && res.suggestions.length > 0) setData(res);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, []);
+
   return (
-    <Card className="rounded-[24px] px-[28px] py-[24px]" style={{ borderColor: color }}>
-      <p className="font-semibold text-[16px] md:text-[18px] mb-4" style={{ color }}>
-        {heading}
+    <Card className="rounded-[24px] px-[28px] py-[24px]" style={{ borderColor: data.color }}>
+      <p className="font-semibold text-[16px] md:text-[18px] mb-4" style={{ color: data.color }}>
+        {loading ? "Getting personalised suggestions..." : data.heading}
       </p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {suggestions.map((s) => (
+        {data.suggestions.map((s) => (
           <div
             key={s.title}
             className="flex gap-3 rounded-xl p-4"
